@@ -63,6 +63,7 @@ func heroChangeLane(dir int) {
 		return
 	}
 	laneNow = target
+	play "lane"
 	moveDir = "lane"
 	if taskType == "lane" {
 		taskProgress = taskProgress + 1
@@ -101,6 +102,7 @@ func heroJump() {
 		return
 	}
 	jumping = true
+	play "jump"
 	if taskType == "jump" {
 		taskProgress = taskProgress + 1
 	}

@@ -58,6 +58,7 @@ var (
 	speedMul float64 // 速度倍率（极速冲刺 / 缓速慢镜）
 	scoreMul int     // 积分倍率（双倍积分）
 	tickAcc  float64 // 帧广播节拍（驱动玩家奔跑动画）
+	bgmAcc  float64 // BGM 循环计时（秒）
 
 	// ===== 字符串 =====
 	trackName string

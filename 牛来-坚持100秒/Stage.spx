@@ -424,6 +424,8 @@ onMsg "setupTrack", => {
 // Game 重置一局
 onMsg "resetRun", => {
 	resetRun
+	bgmAcc = 0
+	play "bgm"
 }
 
 // Player 请求失败结算（failReason 由 Player 设置）
@@ -475,6 +477,13 @@ onStart => {
 			continue
 		}
 		elapsed += 0.05
+
+		// BGM 循环：bgm 素材 8 秒，到点重触发一次
+		bgmAcc = bgmAcc + 0.05
+		if bgmAcc >= 8.0 {
+			bgmAcc = 0
+			play "bgm"
+		}
 
 		// HUD：剩余秒
 		remain = 100 - int(elapsed)
