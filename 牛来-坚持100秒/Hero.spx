@@ -140,11 +140,24 @@ func heroSlide() {
 		return
 	}
 	sliding = true
+	play "slide"
 	if taskType == "slide" {
 		taskProgress = taskProgress + 1
 	}
-	changeYpos 24
-	wait 0.5
+	// 蹲低姿态：固定一帧造型 + 压扁 + 下移（Y 向下=更低，钻过高架牛）
+	setCostume "heroA"
+	setSize 0.5
+	changeYpos -22
+	// 滑铲持续约 0.55s，足够覆盖高架牛穿过玩家平面的那一帧
+	i := 0
+	for {
+		wait 0.05
+		i = i + 1
+		if i >= 11 {
+			break
+		}
+	}
+	setSize 0.6
 	setYpos -55.0
 	sliding = false
 }
@@ -186,16 +199,18 @@ onCloned data => {
 			}
 			continue
 		}
-		// 奔跑两帧循环
+		// 奔跑两帧循环（滑铲/跳跃期间冻结造型，由动作函数接管姿态）
 		bobAcc = bobAcc + 0.05
 		if bobAcc >= 0.15 {
 			bobAcc = 0
-			if runFrame == 0 {
-				setCostume "heroA"
-				runFrame = 1
-			} else {
-				setCostume "heroB"
-				runFrame = 0
+			if !sliding && !jumping {
+				if runFrame == 0 {
+					setCostume "heroA"
+					runFrame = 1
+				} else {
+					setCostume "heroB"
+					runFrame = 0
+				}
 			}
 		}
 		// 跟随车道（Y 由跳跃/滑铲管理，这里只改 X）
