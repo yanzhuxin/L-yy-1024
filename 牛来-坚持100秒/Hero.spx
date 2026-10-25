@@ -18,9 +18,10 @@
 // 官方代码组织规范：var（唯一一个块）→ func → 事件处理器
 
 var (
-	bobAcc   float64 // 奔跑帧切换节拍
-	runFrame int     // 奔跑帧：0 / 1
-	isTpl    bool    // true = 模板本体（不响应指令）
+	bobAcc      float64 // 奔跑帧切换节拍
+	runFrame    int     // 奔跑帧：0 / 1
+	isTpl       bool    // true = 模板本体（不响应指令）
+	bufferedAct string  // 动作缓冲：动作进行中按下的跳跃/滑铲，结束后立即补放（支持快速连招）
 )
 
 // ===== 纵深投影：玩家固定在 z = 0 =====
@@ -44,6 +45,7 @@ func heroReset() {
 	invincible = false
 	runFrame = 0
 	bobAcc = 0
+	bufferedAct = ""
 	setCostume "heroA"
 	setSize 0.6
 	setXYpos 0, -55
@@ -99,6 +101,8 @@ func heroJump() {
 		return
 	}
 	if jumping || sliding {
+		// 动作进行中再次按下 → 写入缓冲，结束后立即补放（支持一秒内快速连招）
+		bufferedAct = "jump"
 		return
 	}
 	jumping = true
@@ -126,6 +130,16 @@ func heroJump() {
 	}
 	setYpos -55.0
 	jumping = false
+	// 消费缓冲：落地后立即补放进行中被按下的跳跃/滑铲，实现快速连招
+	if !finished && bufferedAct != "" {
+		act := bufferedAct
+		bufferedAct = ""
+		if act == "jump" {
+			heroJump
+		} else {
+			heroSlide
+		}
+	}
 }
 
 // heroSlide 滑铲（下压钻过高架牛）
@@ -137,6 +151,8 @@ func heroSlide() {
 		return
 	}
 	if sliding || jumping {
+		// 动作进行中再次按下 → 写入缓冲，结束后立即补放（支持一秒内快速连招）
+		bufferedAct = "slide"
 		return
 	}
 	sliding = true
@@ -148,18 +164,28 @@ func heroSlide() {
 	setCostume "heroA"
 	setSize 0.5
 	changeYpos -22
-	// 滑铲持续约 0.55s，足够覆盖高架牛穿过玩家平面的那一帧
+	// 滑铲持续约 0.4s（8×0.05），缩短后两滑铲可落入 1 秒窗口
 	i := 0
 	for {
 		wait 0.05
 		i = i + 1
-		if i >= 11 {
+		if i >= 8 {
 			break
 		}
 	}
 	setSize 0.6
 	setYpos -55.0
 	sliding = false
+	// 消费缓冲：结束后立即补放进行中被按下的跳跃/滑铲，实现快速连招
+	if !finished && bufferedAct != "" {
+		act := bufferedAct
+		bufferedAct = ""
+		if act == "jump" {
+			heroJump
+		} else {
+			heroSlide
+		}
+	}
 }
 
 // heroShieldFlash 护盾抵挡后的无敌闪烁
