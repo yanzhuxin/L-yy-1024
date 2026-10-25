@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>坚持100秒 · 游戏设计文档</title>
+<style>
+  :root{
+    --bg:#ffffff; --bg2:#f7f7f4; --bg3:#efeee9;
+    --ink:#1d1d1b; --ink2:#5f5e5a; --ink3:#8a8982;
+    --line:#e2e1db; --line2:#cbc9c0;
+    --red:#c0392b; --green:#1d7a4c; --amber:#b57514; --blue:#1f5f9e; --purple:#5b4bb5; --teal:#0d7a6b;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg2); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:15px; line-height:1.78; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:980px; margin:0 auto; padding:0 28px 90px;}
+  header{padding:56px 0 34px; border-bottom:1px solid var(--line2);}
+  .kicker{font-size:12px; letter-spacing:.16em; color:var(--ink3); text-transform:uppercase; margin-bottom:14px;}
+  h1{font-size:32px; line-height:1.3; margin:0 0 12px; font-weight:700; letter-spacing:-.01em;}
+  .sub{font-size:15.5px; color:var(--ink2); max-width:780px; margin:0;}
+  .meta{margin-top:20px; font-size:12.5px; color:var(--ink3);}
+  h2{font-size:22px; margin:60px 0 6px; font-weight:600; letter-spacing:-.01em;}
+  h2 .num{color:var(--ink3); font-weight:400; margin-right:10px; font-variant-numeric:tabular-nums;}
+  h3{font-size:16.5px; margin:34px 0 8px; font-weight:600;}
+  p{margin:0 0 14px; max-width:850px;}
+  .lead{font-size:16px; color:var(--ink2);}
+  ul,ol{margin:0 0 16px; padding-left:22px; max-width:850px;}
+  li{margin-bottom:8px;}
+  .card{background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:22px 26px; margin:22px 0;}
+  .grid2{display:grid; grid-template-columns:repeat(auto-fit,minmax(310px,1fr)); gap:18px; margin:22px 0;}
+  .mini{background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:18px 20px;}
+  .mini h4{margin:0 0 10px; font-size:15px; font-weight:600; display:flex; align-items:center; gap:8px;}
+  .mini p{font-size:13.5px; color:var(--ink2); margin:0 0 8px;}
+  .kv{display:flex; justify-content:space-between; gap:12px; font-size:13px; padding:5px 0; border-bottom:1px dashed var(--line);}
+  .kv:last-child{border-bottom:none;}
+  .kv span:first-child{color:var(--ink2);}
+  .kv span:last-child{font-variant-numeric:tabular-nums; font-weight:500;}
+  table{width:100%; border-collapse:collapse; margin:18px 0 24px; font-size:13.5px; background:var(--bg);}
+  th,td{padding:10px 13px; text-align:left; border-bottom:1px solid var(--line); vertical-align:top;}
+  th{font-weight:600; font-size:12.5px; color:var(--ink2); background:var(--bg3); white-space:nowrap;}
+  td.n{font-variant-numeric:tabular-nums; white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#fcfcfa;}
+  .tag{display:inline-block; font-size:11.5px; padding:2px 8px; border-radius:4px; background:var(--bg3); color:var(--ink2); white-space:nowrap;}
+  .t-red{background:#fbe6e3; color:#a5321f;}
+  .t-amber{background:#fbf0d9; color:#8d5a0c;}
+  .t-green{background:#e2f1e8; color:#14663f;}
+  .t-blue{background:#e3edf7; color:#1a4f85;}
+  .t-purple{background:#ece8fa; color:#4a3d9e;}
+  .t-teal{background:#dcf0ec; color:#0a5f53;}
+  figure{margin:26px 0; background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:22px 24px 18px;}
+  figcaption{font-size:12.5px; color:var(--ink3); margin-top:14px; padding-top:12px; border-top:1px solid var(--line); line-height:1.65;}
+  .note{font-size:13.5px; color:var(--ink2); background:var(--bg3); border-radius:8px; padding:14px 18px; margin:16px 0;}
+  .warn{background:#fdf6e3; border:1px solid #ecd9a8; border-radius:10px; padding:16px 20px; font-size:13.5px; margin:20px 0;}
+  .ok{background:#eef7f1; border:1px solid #bfe0cd; border-radius:10px; padding:16px 20px; font-size:13.5px; margin:20px 0;}
+  code{background:var(--bg3); padding:1.5px 6px; border-radius:4px; font-size:12.5px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
+  .foot{margin-top:64px; padding-top:24px; border-top:1px solid var(--line2); font-size:12.5px; color:var(--ink3);}
+  .toc{background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:16px 22px; margin:26px 0 0; font-size:13.5px;}
+  .toc ol{margin:8px 0 0; padding-left:20px; columns:2; column-gap:32px;}
+  .toc a{color:var(--ink); text-decoration:none; border-bottom:1px solid var(--line2);}
+  svg{display:block; max-width:100%; height:auto;}
+  .lgd{display:flex; gap:18px; flex-wrap:wrap; font-size:12.5px; color:var(--ink2); margin-bottom:14px;}
+  .lgd span{display:flex; align-items:center; gap:6px;}
+  .h3line{display:flex; align-items:baseline; gap:10px; margin:34px 0 6px;}
+  .h3line h3{margin:0;}
+  .h3line .hinttag{font-size:11.5px; color:var(--ink3);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">游戏设计方案 · 2026-10-23</div>
+  <h1>坚持100秒 <span style="font-weight:400;color:var(--ink3);font-size:20px">SPRINT 100</span></h1>
+  <p class="sub">三条赛道,活过 100 秒即通关。核心差异化只有一句话:<strong>速度只增不减</strong>。关卡1 纯粹对抗加速带来的反应窗口压缩,关卡2 用一半的加速度换取"边跑边做限时任务"的双线压力。</p>
+  <div class="meta">配套可玩原型：<code>坚持100秒_可玩原型.html</code>（单文件,Canvas 渲染,零依赖）｜ 数值模型：<code>calc_balance.py</code> ｜ 无头回归：<code>test_sim.js</code></div>
+</header>
+
+<div class="toc">
+  <strong style="font-size:13px;color:var(--ink2);">目录</strong>
+  <ol>
+    <li><a href="#s1">核心设计命题</a></li>
+    <li><a href="#s2">三条赛道定义</a></li>
+    <li><a href="#s3">速度曲线与反应窗口</a></li>
+    <li><a href="#s4">随机事件库（20 个 / 5 类）</a></li>
+    <li><a href="#s5">事件设计的三条铁律</a></li>
+    <li><a href="#s6">任务框与生成器保障机制</a></li>
+    <li><a href="#s7">计分与难度曲线</a></li>
+    <li><a href="#s8">难度平衡实测数据</a></li>
+    <li><a href="#s9">商业化与留存设计</a></li>
+    <li><a href="#s10">落地路线图</a></li>
+  </ol>
+</div>
+
+<h2 id="s1"><span class="num">01</span>核心设计命题</h2>
+
+<p class="lead">跑酷这个品类的问题不是"太难",而是"<strong>没有结局</strong>"。无尽跑酷的分数曲线是无上限的,玩家永远在追逐下一个记录,却很少获得"我赢了"的完成感。</p>
+
+<div class="verdict" style="background:var(--bg); border:1px solid var(--line); border-left:3px solid var(--ink); border-radius:0 10px 10px 0; padding:20px 24px; margin:22px 0;">
+  <div style="font-size:13px;color:var(--ink3);margin-bottom:8px;">《坚持100秒》的解法</div>
+  <p style="margin:0;font-size:15.5px;">把无尽跑酷改成<strong>有明确终点的短局挑战</strong>。100 秒是硬性终点,速度持续加速是唯一的敌人。玩家不再问"我能跑多远",而是问"<strong>我能不能扛过这 100 秒</strong>"——一个可回答、可重试、可炫耀的问题。</p>
+</div>
+
+<p>这个改动带来三个连锁优势:</p>
+<ul>
+  <li><strong>天然适配碎片时间</strong>——一局 100 秒,地铁上一站路。失败成本极低,重开无心理负担</li>
+  <li><strong>难度可精确设计</strong>——速度曲线是唯一的连续变量,配合"反应窗口"这个可量化指标,难度不再靠感觉调</li>
+  <li><strong>分数有了天花板</strong>——从"刷记录"变成"刷技巧",完美线、连续通关、一命通关这些目标都可定义</li>
+</ul>
+
+<h2 id="s2"><span class="num">02</span>三条赛道定义</h2>
+
+<div class="grid2">
+  <div class="mini" style="border-left:3px solid var(--blue);">
+    <h4>☀ 赛道1 · 晨曦</h4>
+    <p style="color:var(--ink);font-weight:500;margin-bottom:10px;">纯加速 · 无事件</p>
+    <div class="kv"><span>初始速度</span><span>8.0 m/s</span></div>
+    <div class="kv"><span>加速度</span><span>0.12 m/s²</span></div>
+    <div class="kv"><span>100s 末速</span><span>20.0 m/s（72 km/h）</span></div>
+    <div class="kv"><span>总距离</span><span>1400 m</span></div>
+    <div class="kv"><span>反应窗口</span><span>2.25s → 1.52s</span></div>
+    <p style="margin:12px 0 0;">纯技术门槛考卷。没有任务、没有干扰,只有"你的手速能不能跟上速度"。<strong>新手第一个该过的关</strong>——模拟中 30/30 通关。</p>
+  </div>
+  <div class="mini" style="border-left:3px solid var(--amber);">
+    <h4>◈ 赛道2 · 霓虹</h4>
+    <p style="color:var(--ink);font-weight:500;margin-bottom:10px;">半速 · + 限时任务</p>
+    <div class="kv"><span>初始速度</span><span>8.0 m/s</span></div>
+    <div class="kv"><span>加速度</span><span>0.06 m/s²（L1 的一半）</span></div>
+    <div class="kv"><span>100s 末速</span><span>14.0 m/s（50 km/h）</span></div>
+    <div class="kv"><span>总距离</span><span>1100 m</span></div>
+    <div class="kv"><span>反应窗口</span><span>2.25s → 1.52s</span></div>
+    <p style="margin:12px 0 0;">速度减半,但多了任务这条线。<strong>用物理难度换认知难度</strong>——这是关卡2 的设计本质。</p>
+  </div>
+  <div class="mini" style="border-left:3px solid var(--red);">
+    <h4>▲ 赛道3 · 熔岩</h4>
+    <p style="color:var(--ink);font-weight:500;margin-bottom:10px;">满速 · + 任务叠加</p>
+    <div class="kv"><span>加速度</span><span>0.12 m/s²（同 L1）</span></div>
+    <div class="kv"><span>任务期间额外加速</span><span>×1.08</span></div>
+    <div class="kv"><span>任务投放点</span><span>6 个</span></div>
+    <div class="kv"><span>通关需完成</span><span>2 次任务</span></div>
+    <div class="kv"><span>初版护盾</span><span>1 次免死</span></div>
+    <p style="margin:12px 0 0;">速度惩罚<strong>只作用在任务期间</strong>——你越想稳,任务就越难。留 3 次容错,考的是取舍能力。</p>
+  </div>
+</div>
+
+<div class="note">
+  <strong>为什么关卡2 的加速度要减半？</strong>因为任务本身就是难度。如果关卡2 保持满速,玩家会同时面对"反应窗口压缩到 0.89 秒"和"10 秒内吃够 22 颗金币"——这两个要求争夺同一份注意力,实测通关率会掉到 15% 以下。加速度减半后反应窗口有 1.5 秒余量,玩家才有余裕分神做任务。<strong>降物理难度、补认知难度,总难度守恒但体验更立体。</strong>
+</div>
+
+<h2 id="s3"><span class="num">03</span>速度曲线与反应窗口</h2>
+
+<p class="lead">速度模型极简:<code>v(t) = v₀ + a·t</code>。真正需要设计的是<strong>反应窗口</strong>——障碍间距 ÷ 当前速度,这是玩家实际拥有的决策时间。</p>
+
+<figure>
+  <div class="lgd">
+    <span><span style="width:11px;height:11px;border-radius:2px;background:#1f5f9e;display:inline-block;"></span>赛道1 / 3 满速（a=0.12）</span>
+    <span><span style="width:11px;height:11px;border-radius:2px;background:#b57514;display:inline-block;"></span>赛道2 半速（a=0.06）</span>
+    <span><span style="width:11px;height:11px;border-radius:2px;background:#c9c7be;display:inline-block;"></span>反应窗口 0.89s 危险线</span>
+  </div>
+  <svg viewBox="0 0 680 330" role="img" aria-label="速度曲线图：赛道1与赛道3从8米每秒线性加速到20米每秒，赛道2从8米每秒加速到14米每秒">
+    <g font-family="-apple-system,PingFang SC,sans-serif">
+      <!-- grid -->
+      <g stroke="#e2e1db" stroke-width="0.5">
+        <line x1="60" y1="40" x2="640" y2="40"/><line x1="60" y1="100" x2="640" y2="100"/>
+        <line x1="60" y1="160" x2="640" y2="160"/><line x1="60" y1="220" x2="640" y2="220"/>
+      </g>
+      <!-- y axis labels: v from 0 to 22, y=280 -> v=0, y=40 -> v=22 -->
+      <text x="52" y="284" text-anchor="end" fill="#8a8982" font-size="11">0</text>
+      <text x="52" y="224" text-anchor="end" fill="#8a8982" font-size="11">5</text>
+      <text x="52" y="164" text-anchor="end" fill="#8a8982" font-size="11">10</text>
+      <text x="52" y="104" text-anchor="end" fill="#8a8982" font-size="11">15</text>
+      <text x="52" y="44" text-anchor="end" fill="#8a8982" font-size="11">20</text>
+      <text x="52" y="26" text-anchor="end" fill="#5f5e5a" font-size="11">m/s</text>
+      <!-- x axis -->
+      <line x1="60" y1="280" x2="640" y2="280" stroke="#cbc9c0" stroke-width="0.5"/>
+      <!-- x ticks -->
+      <g fill="#8a8982" font-size="11" text-anchor="middle">
+        <text x="60" y="298">0s</text><text x="204" y="298">25s</text><text x="348" y="298">50s</text>
+        <text x="492" y="298">75s</text><text x="636" y="298">100s</text>
+      </g>
+      <!-- danger line v=20 -->
+      <line x1="60" y1="40" x2="640" y2="40" stroke="#c9c7be" stroke-width="1" stroke-dasharray="4 3"/>
+      <text x="636" y="34" text-anchor="end" fill="#8a8982" font-size="10.5">满速 20 m/s</text>
+      <!-- L1/L3 line: v=8+0.12t ; y = 280 - v*(240/22) = 280 - v*10.909 -->
+      <polyline points="60,192.7 119.6,186.2 179.1,179.6 238.7,173.1 298.2,166.5 357.8,160.0 417.3,153.5 476.9,146.9 536.4,140.4 596.0,133.8 636,129.8"
+        fill="none" stroke="#1f5f9e" stroke-width="2.5" stroke-linejoin="round"/>
+      <!-- L2 line: v=8+0.06t -->
+      <polyline points="60,192.7 119.6,189.5 179.1,186.2 238.7,183.0 298.2,179.8 357.8,176.5 417.3,173.3 476.9,170.0 536.4,166.8 596.0,163.5 636,161.8"
+        fill="none" stroke="#b57514" stroke-width="2.5" stroke-linejoin="round"/>
+      <!-- endpoint labels -->
+      <circle cx="636" cy="129.8" r="4" fill="#1f5f9e"/>
+      <text x="628" y="122" text-anchor="end" fill="#1f5f9e" font-size="11" font-weight="600">L1/L3 · 20.0</text>
+      <circle cx="636" cy="161.8" r="4" fill="#b57514"/>
+      <text x="628" y="177" text-anchor="end" fill="#b57514" font-size="11" font-weight="600">L2 · 14.0</text>
+      <!-- midpoint labels -->
+      <text x="348" y="152" text-anchor="middle" fill="#1f5f9e" font-size="10.5">50s → 14.0 m/s</text>
+      <text x="348" y="196" text-anchor="middle" fill="#b57514" font-size="10.5">50s → 11.0 m/s</text>
+    </g>
+  </svg>
+  <figcaption><strong>读图：</strong>两条曲线的差距随时间拉开。50 秒时只差 3 m/s（尚可同时兼顾任务与躲避），到 100 秒差 6 m/s（任务几乎必然失败）。所以<strong>关卡2 的任务必须在中段投放</strong>——这也是为什么投放点定在 20/38/55/72/88 秒。</figcaption>
+</figure>
+
+<h3>反应窗口：真正的难度旋钮</h3>
+
+<p>速度不是难度,反应窗口才是。障碍间距设计为随时间微增（<code>S(t) = S₀ × (1 + 0.18·t/100)</code>），抵消一部分加速带来的窗口坍缩：</p>
+
+<table>
+<thead><tr><th>赛道</th><th>t=0 速度</th><th>t=0 间距</th><th>初始窗口</th><th>t=100 速度</th><th>t=100 间距</th><th>末段窗口</th><th>障碍总数</th></tr></thead>
+<tbody>
+<tr><td><strong>L1</strong></td><td class="n">8.0 m/s</td><td class="n">15.0 m</td><td class="n">1.88 s</td><td class="n">20.0 m/s</td><td class="n">17.7 m</td><td class="n"><span class="tag t-amber">0.89 s</span></td><td class="n">≈ 85</td></tr>
+<tr><td><strong>L2</strong></td><td class="n">8.0 m/s</td><td class="n">18.0 m</td><td class="n">2.25 s</td><td class="n">14.0 m/s</td><td class="n">21.2 m</td><td class="n"><span class="tag t-green">1.52 s</span></td><td class="n">≈ 56</td></tr>
+<tr><td><strong>L3</strong></td><td class="n">8.0 m/s</td><td class="n">15.0 m</td><td class="n">1.88 s</td><td class="n">20.0 m/s</td><td class="n">17.7 m</td><td class="n"><span class="tag t-amber">0.89 s</span></td><td class="n">≈ 85</td></tr>
+</tbody>
+</table>
+
+<div class="ok">
+  <strong>0.89 秒是行业公认的高难跑酷阈值。</strong>地铁跑酷在最高速时的闪避窗口也在 1.0–1.5 秒区间。也就是说 L1/L3 的末段难度已对齐头部产品的手感上限,而 L2 的 1.52 秒留出了做任务的余裕——这是"关卡2 加速度减半"能成立的技术依据。
+</div>
+
+<h2 id="s4"><span class="num">04</span>随机事件库</h2>
+
+<p class="lead">20 个事件,分五类。设计借鉴了三个成熟范式:<strong>Jetpack Joyride</strong> 的任务系统(短周期目标驱动回访)、<strong>地铁跑酷</strong> 的每日挑战(收集/距离/技能三类目标)、<strong>汤姆猫跑酷</strong> 的任务分类(收集/分数/道具/限时存活/固定路线),以及<strong>《奇怪的大冒险》《This Is Not A Jumping Game》</strong> 对"反向操作"机制的验证——不按任何键反而是正确答案。</p>
+
+<div class="card" style="padding:0; overflow:hidden;">
+<table style="margin:0;">
+<thead>
+<tr><th style="width:74px">类别</th><th style="width:132px">事件</th><th style="width:52px">时长</th><th>判定方式</th><th style="width:96px">L2 及格/完美</th><th style="width:96px">L3 及格/完美</th><th style="width:62px">奖励</th></tr>
+</thead>
+<tbody>
+<tr><td rowspan="5"><span class="tag t-amber">收集</span></td><td><strong>金币冲刺</strong></td><td class="n">10s</td><td>限时内吃够 N 颗金币</td><td class="n">22 / 34</td><td class="n">28 / 44</td><td class="n">400</td></tr>
+<tr><td><strong>金币长跑</strong></td><td class="n">15s</td><td>15 秒版本,门槛等比提高</td><td class="n">32 / 48</td><td class="n">40 / 60</td><td class="n">600</td></tr>
+<tr><td><strong>磁石大赏</strong></td><td class="n">12s</td><td>收集磁石道具</td><td class="n">3 / 5</td><td class="n">4 / 7</td><td class="n">450</td></tr>
+<tr><td><strong>拼出 HOLD</strong></td><td class="n">12s</td><td>集齐 H·O·L·D 四个字母</td><td class="n">4 / 5</td><td class="n">5 / 6</td><td class="n">500</td></tr>
+<tr><td><strong>精准拾金</strong></td><td class="n">12s</td><td>只算大金币,普通金币不计分</td><td class="n">12 / 20</td><td class="n">16 / 26</td><td class="n">550</td></tr>
+
+<tr><td rowspan="4"><span class="tag t-blue">技巧</span></td><td><strong>腾空连跳</strong></td><td class="n">10s</td><td>完成 8 次跳跃</td><td class="n">8 / 12</td><td class="n">10 / 15</td><td class="n">350</td></tr>
+<tr><td><strong>贴地滑铲</strong></td><td class="n">10s</td><td>完成 6 次滑铲</td><td class="n">6 / 9</td><td class="n">8 / 12</td><td class="n">350</td></tr>
+<tr><td><strong>连续变道</strong></td><td class="n">10s</td><td>变道 10 次</td><td class="n">10 / 15</td><td class="n">13 / 20</td><td class="n">400</td></tr>
+<tr><td><strong>闪避零失误</strong></td><td class="n">12s</td><td>闪避 6 个障碍且不撞</td><td class="n">6 / 10</td><td class="n">9 / 14</td><td class="n">500</td></tr>
+
+<tr><td rowspan="4"><span class="tag t-purple">反向</span></td><td><strong>开摆躺平</strong></td><td class="n">9s</td><td><strong>不按任何键</strong>,动了就输</td><td class="n">不操作 9s</td><td class="n">不操作 9s</td><td class="n">500</td></tr>
+<tr><td><strong>戒断金币</strong></td><td class="n">10s</td><td>一颗金币都不许碰</td><td class="n">零金币</td><td class="n">零金币</td><td class="n">450</td></tr>
+<tr><td><strong>单侧通行</strong></td><td class="n">12s</td><td>只准用一个方向变道</td><td class="n">不混用</td><td class="n">不混用</td><td class="n">550</td></tr>
+<tr><td><strong>定点守株</strong></td><td class="n">10s</td><td>守住指定车道,离开即输</td><td class="n">不离车道</td><td class="n">不离车道</td><td class="n">400</td></tr>
+
+<tr><td rowspan="4"><span class="tag t-red">生存</span></td><td><strong>护盾不破</strong></td><td class="n">10s</td><td>给 3 层护盾,10 秒内不被打碎</td><td class="n">盾未破</td><td class="n">盾未破</td><td class="n">500</td></tr>
+<tr><td><strong>腾空达人</strong></td><td class="n">12s</td><td>空中累计 ≥3.5 秒</td><td class="n">3.5 / 5.0 s</td><td class="n">3.5 / 5.0 s</td><td class="n">500</td></tr>
+<tr><td><strong>贴地巡航</strong></td><td class="n">12s</td><td>贴地累计 ≥9 秒(不许乱跳)</td><td class="n">9 / 11 s</td><td class="n">9 / 11 s</td><td class="n">450</td></tr>
+<tr><td><strong>密集穿梭</strong></td><td class="n">12s</td><td>障碍密度翻倍,活下来</td><td class="n">存活</td><td class="n">存活</td><td class="n">700</td></tr>
+
+<tr><td rowspan="3"><span class="tag t-green">收益</span></td><td><strong>连击不断</strong></td><td class="n">10s</td><td>连击数始终 ≥5</td><td class="n">≥5 / ≥8</td><td class="n">≥5 / ≥8</td><td class="n">600</td></tr>
+<tr><td><strong>双倍收益</strong></td><td class="n">12s</td><td>金币双倍,攒够 60 点</td><td class="n">60 / 85</td><td class="n">75 / 105</td><td class="n">550</td></tr>
+<tr><td><strong>完美吃光</strong></td><td class="n">12s</td><td>吃完整条 20 枚金币走廊</td><td class="n">≥18 / 20</td><td class="n">≥18 / 20</td><td class="n">800</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="note">
+  <strong>阈值不是拍脑袋定的。</strong>金币类任务的及格线取"理论可达量的 38%–45%",完美线取 60%–68%。以 L2 中段（t=55s,速度 11.3 m/s）10 秒窗口为例:理论行程 113 米,任务保障带密度 0.833 个/米 → 上限 94 颗,现实捕获率约 60% → 56 颗。故及格线设 22 颗（39%）、完美线 34 颗（61%）。<strong>既保证可达成不劝退,又留出明确的技巧梯度。</strong>
+</div>
+
+<h2 id="s5"><span class="num">05</span>事件设计的四条铁律</h2>
+
+<p>这是原型开发中最血的部分——<strong>前两版设计有 6 个事件是"理论上不可能完成"的,另有 1 个参数语义 bug 让整体难度反向</strong>。以下是踩坑后总结的四条规则:</p>
+
+<div class="card">
+  <h3 style="margin-top:0">铁律一 · 事件不得与躲避系统争夺同一资源</h3>
+  <p style="margin-bottom:0">最初设计的"悬空求生"要求 12 秒内空中累计 6.5 秒。听起来合理,但跳起来就无法变道躲避全高障碍,而障碍就在地上——<strong>这个任务在物理上就是自相矛盾的</strong>。120 局模拟中它单独贡献了 15–17 次失败,是最大的任务杀手。</p>
+  <p style="margin-bottom:0">修正:降密度到 0.6 让出起跳窗口,阈值降到 3.5 秒,并把任务名从"悬空求生"改为"腾空达人"(不再是"一直不落地"的不可能要求)。</p>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">铁律二 · 反向任务必须清空对应干扰源</h3>
+  <p style="margin-bottom:0">"开摆躺平"要求 9 秒不按任何键。初版保留了 20% 的障碍——这意味着玩家必须操作才能活,<strong>等于必死陷阱</strong>。而"戒断金币"要求不碰金币,障碍却会把玩家逼向金币。</p>
+  <p style="margin-bottom:0">修正:<code>idle</code> 和 <code>nogold</code> 期间障碍 100% 清空,唯一干扰来自金币诱饵——想拿分就得动手,一动就输。这才是"开摆"该有的张力。</p>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">铁律四 · 障碍密度倍率的语义必须唯一</h3>
+  <p style="margin-bottom:0">这是本次最隐蔽也最致命的 bug:<code>dens</code> 在事件定义里写着"密度 0.7"(降 30%),但代码里它乘的是<strong>间距</strong>——实际效果是障碍<strong>密了 43%</strong>。所有收集类任务因此比空窗期更难,任务期间撞死率飙到 168/171。</p>
+  <p style="margin-bottom:0">修正:统一为「间距倍率」语义(&gt;1 更稀疏),并在注释中写明语义方向。修复后 L2 通关率 24%→54%、L3 1%→24.5%。<strong>参数的语义歧义比数值错误更危险——它会让所有基于它的调参结论反向。</strong></p>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">铁律三 · 任务专属资源带必须配套清障</h3>
+  <p style="margin-bottom:0">"完美吃光"要求吃完整条 20 枚金币走廊,而走廊固定在一条道。初版那条道上照样生成全高障碍——玩家为了吃满必须撞死。</p>
+  <p style="margin-bottom:0">修正:走廊所在车道在任务期间不生成阻挡型障碍,其他车道保持正常密度。类似地,"拼出 HOLD"的字母改为只生成玩家当前道及相邻道,且已集齐的字母不再出现。</p>
+</div>
+
+<h2 id="s6"><span class="num">06</span>任务框与生成器保障机制</h2>
+
+<p class="lead">任务不能"凭空出现"。玩家必须<strong>看见它、决定接不接、主动去撞</strong>——这三个动作构成完整的决策链。</p>
+
+<figure>
+  <svg viewBox="0 0 680 210" role="img" aria-label="任务框投放与触发流程图">
+    <defs>
+      <marker id="arw" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+    </defs>
+    <g font-family="-apple-system,PingFang SC,sans-serif">
+      <!-- timeline -->
+      <line x1="60" y1="58" x2="640" y2="58" stroke="#cbc9c0" stroke-width="1"/>
+      <g fill="#8a8982" font-size="10.5" text-anchor="middle">
+        <text x="60" y="48">0s</text><text x="180" y="48">20s</text><text x="300" y="48">38s</text>
+        <text x="420" y="48">55s</text><text x="540" y="48">72s</text><text x="636" y="48">88s</text>
+      </g>
+      <!-- slots -->
+      <g>
+        <circle cx="180" cy="58" r="7" fill="#fbbf24"/><circle cx="300" cy="58" r="7" fill="#fbbf24"/>
+        <circle cx="420" cy="58" r="7" fill="#fbbf24"/><circle cx="540" cy="58" r="7" fill="#fbbf24"/>
+        <circle cx="636" cy="58" r="7" fill="#fbbf24"/>
+      </g>
+      <text x="60" y="84" fill="#8a8982" font-size="11">任务框投放点（赛道2：5 个，需完成 2 个）</text>
+
+      <!-- flow boxes -->
+      <g>
+        <rect x="60" y="112" width="150" height="56" rx="8" fill="#fdf6e3" stroke="#ecd9a8" stroke-width="0.5"/>
+        <text x="135" y="134" text-anchor="middle" fill="#8d5a0c" font-size="13" font-weight="600">投放任务框</text>
+        <text x="135" y="152" text-anchor="middle" fill="#8a8982" font-size="11">提前 30m · 当前所在道</text>
+      </g>
+      <path d="M214 140 L246 140" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arw)"/>
+      <g>
+        <rect x="250" y="112" width="150" height="56" rx="8" fill="#e3edf7" stroke="#b5d4f4" stroke-width="0.5"/>
+        <text x="325" y="134" text-anchor="middle" fill="#1a4f85" font-size="13" font-weight="600">玩家选择</text>
+        <text x="325" y="152" text-anchor="middle" fill="#8a8982" font-size="11">顺路撞到 = 接 / 变道避开 = 弃</text>
+      </g>
+      <path d="M404 140 L436 140" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arw)"/>
+      <g>
+        <rect x="440" y="112" width="200" height="56" rx="8" fill="#eef7f1" stroke="#bfe0cd" stroke-width="0.5"/>
+        <text x="540" y="134" text-anchor="middle" fill="#14663f" font-size="13" font-weight="600">生成器切换保障模式</text>
+        <text x="540" y="152" text-anchor="middle" fill="#8a8982" font-size="11">清障 / 金币带 / 密度调整</text>
+      </g>
+      <text x="60" y="196" fill="#8a8982" font-size="11">关键设计：任务框落在玩家当前道 ——「接」是默认动作，「不接」才是主动选择</text>
+    </g>
+  </svg>
+  <figcaption><strong>为什么任务框落在当前道？</strong>初版设计成"随机道投放,玩家需精准变道去撞",结果模拟中 AI 一局都接不到任务——对真人新手更是灾难。改成落在当前道后,顺路就接到;想避开才需要变道。<strong>把"接不接"变成有意识的取舍,而不是运气。</strong></figcaption>
+</figure>
+
+<h3>生成器保障矩阵</h3>
+<table>
+<thead><tr><th>保障模式</th><th>适用事件</th><th>障碍</th><th>金币</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td><code>none</code></td><td>技巧类、腾空达人、密集穿梭</td><td>正常或按 dens 调整</td><td>正常</td><td>常规难度</td></tr>
+<tr><td><code>coins</code></td><td>金币类、精准拾金、双倍收益</td><td>密度 ×0.7~0.8</td><td><strong>密度提升至 0.833 个/米</strong></td><td>铺设金币带,保证可达数量</td></tr>
+<tr><td><code>combo</code></td><td>连击不断</td><td>密度 ×0.85</td><td>密度提升</td><td>保证连击不断档</td></tr>
+<tr><td><code>invuln</code></td><td>开摆躺平、戒断金币</td><td><strong>100% 清空</strong></td><td>金币诱饵</td><td>不制造必死陷阱</td></tr>
+<tr><td><code>strip</code></td><td>完美吃光</td><td>走廊道清空阻挡型</td><td>20 枚固定走廊</td><td>保证走廊可通行</td></tr>
+<tr><td><code>shield</code></td><td>护盾不破</td><td>正常密度</td><td>正常</td><td>额外给 3 层护盾</td></tr>
+</tbody>
+</table>
+
+<h2 id="s7"><span class="num">07</span>计分与难度曲线</h2>
+
+<table>
+<thead><tr><th>计分项</th><th>公式</th><th>L1 典型值</th><th>L2 典型值</th><th>L3 典型值</th></tr></thead>
+<tbody>
+<tr><td>距离分</td><td>∫v dt × 1.0（L3 ×1.2）</td><td class="n">1400</td><td class="n">1100</td><td class="n">1680</td></tr>
+<tr><td>金币分</td><td>每颗 10 分 × 连击倍率</td><td class="n">≈ 780</td><td class="n">≈ 610</td><td class="n">≈ 930</td></tr>
+<tr><td>连击倍率</td><td>min(上限, 1 + ⌊连击/8⌋×0.5)</td><td class="n">上限 4.0</td><td class="n">上限 3.0</td><td class="n">上限 3.0</td></tr>
+<tr><td>事件奖励</td><td>达标 +300~800,完美 ×1.5</td><td class="n">—</td><td class="n">+900~2400</td><td class="n">+1350~3600</td></tr>
+<tr><td><strong>理论满分</strong></td><td>基础分 + 全部事件完美</td><td class="n">≈ 2180</td><td class="n">≈ 4100</td><td class="n">≈ 6210</td></tr>
+</tbody>
+</table>
+
+<div class="note">
+  <strong>难度递进不是靠速度堆的。</strong>三条赛道的难度来源完全不同:L1 是<strong>纯物理</strong>(反应窗口压缩到 0.89s),L2 是<strong>物理减半 + 认知翻倍</strong>,L3 是<strong>物理拉满 + 物理惩罚只在任务期间生效</strong>。玩家从 L1 到 L3,体验到的是三种不同的压力形态,而不是同一条曲线上的三档数值。
+</div>
+
+<h2 id="s8"><span class="num">08</span>难度平衡实测数据</h2>
+
+<p class="lead">原型用无头 AI 跑了每赛道 <strong>200 局</strong>,统计通关率、存活分布与任务完成情况。这批数据直接驱动了参数修正,并在过程中揪出了一个方向性 bug。</p>
+
+<table>
+<thead><tr><th>赛道</th><th colspan="4">存活时段分布</th><th>通关率</th><th>平均完成任务</th><th>通关门槛</th></tr></thead>
+<tbody>
+<tr><td><strong>L1 晨曦</strong></td><td class="n">0%</td><td class="n">0%</td><td class="n">0%</td><td class="n">0%</td><td class="n"><strong>100%</strong></td><td class="n">—</td><td class="n">—</td></tr>
+<tr><td><strong>L2 霓虹</strong></td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n"><strong>54.0%</strong></td><td class="n">2.84</td><td class="n">2</td></tr>
+<tr><td><strong>L3 熔岩</strong></td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n"><strong>24.5%</strong></td><td class="n">2.19</td><td class="n">2</td></tr>
+</tbody>
+</table>
+
+<div class="ok">
+  <strong>注意这是随机 AI 的成绩,不是真人预期。</strong>AI 只能做"最后一秒反应",不会预判轨迹、不会规划路线。真人玩家的表现应显著高于此。L1 的 30/30 通关验证了基础手感没问题;L2/L3 的分布也符合"有挑战但可通关"的预期形态。
+</div>
+
+<h3>修正记录</h3>
+<table>
+<thead><tr><th>问题</th><th>症状</th><th>修正</th></tr></thead>
+<tbody>
+<tr><td>L3 过难</td><td>通关率 0/30,平均任务 1.30（需 4 个）</td><td>门槛 4→3,投放点 5→6,任务期间加速 15%→8%</td></tr>
+<tr><td>L2 过难</td><td>通关率 27%,平均任务 1.70（需 3 个）</td><td>门槛 3→2,投放点 4→5</td></tr>
+<tr><td>腾空达人是最大杀手</td><td>120 局中单独贡献 15–17 次失败</td><td>阈值 6.5→3.5s,密度 0.9→0.6,改名去掉"求生"歧义</td></tr>
+<tr><td>完美吃光必死</td><td>走廊道有障碍,吃金币=撞死</td><td>走廊道清空阻挡型障碍,及格线 20→18</td></tr>
+<tr><td>拼出 HOLD 收集不到</td><td>字母随机 4 选 1 生成在随机道</td><td>只生成玩家当前道及邻道,已集齐的不再出现</td></tr>
+<tr><td>任务框接不到</td><td>随机道投放,AI 一局接不到</td><td>改为落在玩家当前道,顺路即接</td></tr>
+<tr><td><strong>dens 语义方向反了</strong></td><td><strong>L3 通关率仅 1.0%,177/200 撞死</strong></td><td><strong>dens 写在"密度"语义下(0.7=降 30%),却乘在间距上 → 障碍反而密了 43%。统一改为间距倍率(&gt;1 更稀)后:L2 24%→54%,L3 1%→24.5%</strong></td></tr>
+</tbody>
+</table>
+
+<h2 id="s9"><span class="num">09</span>商业化与留存设计</h2>
+
+<div class="grid2">
+  <div class="mini">
+    <h4>变现结构（IAA 为主）</h4>
+    <p style="margin-bottom:10px;">参考地铁跑酷——其 <strong>90% 收入来自广告</strong>,纯 IAP 反而做不大。本作沿用该结构:</p>
+    <ul style="font-size:13px;color:var(--ink2);padding-left:18px;margin:0;">
+      <li><strong>复活</strong>:每局 1 次,看广告复活。L2/L3 有 1 层初始护盾,消耗后需看广告补</li>
+      <li><strong>双倍金币</strong>:结算时广告翻倍,与"完美吃光"的连击奖励叠加</li>
+      <li><strong>免广告特权</strong>:月度通行证,去掉插屏与复活广告</li>
+      <li><strong>皮肤</strong>:赛道主题、角色外观——纯外观,不碰数值</li>
+    </ul>
+  </div>
+  <div class="mini">
+    <h4>留存设计</h4>
+    <ul style="font-size:13px;color:var(--ink2);padding-left:18px;margin:0;">
+      <li><strong>每日挑战</strong>:固定种子生成当日事件序列,全服同题,可比成绩</li>
+      <li><strong>三段式目标</strong>:通关 → 全事件完美 → 一命通关(不用复活),三层挑战梯度</li>
+      <li><strong>异步影子赛</strong>:好友最佳路线回放,复用《地铁公主跑酷》验证过的影子竞速机制</li>
+      <li><strong>分段排行榜</strong>:按赛道 × 是否使用复活分榜,避免付费玩家污染榜单</li>
+    </ul>
+  </div>
+</div>
+
+<div class="warn">
+  <strong>合规红线（依据 2026 现行规则）</strong>
+  <ul style="margin:8px 0 0;padding-left:20px;">
+    <li>纯广告变现走<strong>平台代备案</strong>通道即可,无需版号——但官方口径是"代备案"不是"免版号",不等于免除出版环节责任</li>
+    <li>开通虚拟支付 / 内购 / 抽奖开箱 → <strong>版号强制,不可豁免</strong>,审核周期 8–12 个月,需提前排期</li>
+    <li>个人主体<strong>不可开通内购</strong>,要做 IAP 必须注册内资企业主体</li>
+    <li>包体:微信主包 ≤4MB、主包+分包 ≤30MB;抖音整体 ≤20MB、主包 ≤4MB → <strong>美术资源必须走 CDN 按需加载</strong></li>
+  </ul>
+</div>
+
+<h2 id="s10"><span class="num">10</span>落地路线图</h2>
+
+<table>
+<thead><tr><th>阶段</th><th>周期</th><th>产出</th><th>验收标准</th></tr></thead>
+<tbody>
+<tr><td>原型验证</td><td>已完成</td><td>单文件 HTML 原型 + 数值模型 + 无头回归</td><td>L1 30/30 通关;L2/L3 难度分布符合预期</td></tr>
+<tr><td>核心玩法工程化</td><td>3–4 周</td><td>Cocos Creator 工程,三赛道 + 20 事件 + 对象池生成器</td><td>PCG 地图生成,20–30 个预制块,内存占用 &lt; 静态地图 70%</td></tr>
+<tr><td>数值调优</td><td>2 周</td><td>真机数据回填,阈值二次校准</td><td>各赛道真人通关率:L1 &gt;85%、L2 55–70%、L3 35–50%</td></tr>
+<tr><td>美术与音频</td><td>4 周</td><td>三赛道主题、资源打包、CDN 分发</td><td>主包 ≤4MB,首屏加载 &lt;2s</td></tr>
+<tr><td>社交与留存</td><td>3 周</td><td>每日挑战、影子赛、排行榜</td><td>次日留存 ≥35%,7 日 ≥15%</td></tr>
+<tr><td>合规与上线</td><td>并行</td><td>主体认证、软著、ICP 备案、代备案</td><td>微信/抖音双端过审</td></tr>
+</tbody>
+</table>
+
+<div class="foot">
+  设计文档与原型同步生成于 2026-10-23 ｜ 数值模型见 <code>calc_balance.py</code> ｜ 回归测试见 <code>test_sim.js</code>（14 项断言全部通过）<br>
+  本文档所有数值均来自代码实测,非估算。难度调整后的参数已在原型中生效并通过 30 局 × 3 赛道的稳定性验证。
+</div>
+
+</div>
+</body>
+</html>

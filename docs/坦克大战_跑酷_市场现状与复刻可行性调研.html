@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>经典坦克大战 × 跑酷 —— 市场现状与复刻可行性调研</title>
+<style>
+  :root{
+    --bg:#ffffff; --bg2:#f7f7f4; --bg3:#efeee9;
+    --ink:#1d1d1b; --ink2:#5f5e5a; --ink3:#8a8982;
+    --line:#e2e1db; --line2:#cbc9c0;
+    --red:#c0392b; --green:#1d7a4c; --amber:#b57514; --blue:#1f5f9e; --purple:#5b4bb5;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg2); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:15px; line-height:1.75; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:980px; margin:0 auto; padding:0 28px 80px;}
+  header{padding:56px 0 36px; border-bottom:1px solid var(--line2);}
+  .kicker{font-size:12px; letter-spacing:.16em; color:var(--ink3); text-transform:uppercase; margin-bottom:14px;}
+  h1{font-size:30px; line-height:1.35; margin:0 0 14px; font-weight:600; letter-spacing:-.01em;}
+  .sub{font-size:15px; color:var(--ink2); max-width:760px; margin:0;}
+  .meta{margin-top:22px; font-size:12.5px; color:var(--ink3);}
+  h2{font-size:21px; margin:56px 0 8px; font-weight:600; letter-spacing:-.01em;}
+  h2 .num{color:var(--ink3); font-weight:400; margin-right:10px; font-variant-numeric:tabular-nums;}
+  h3{font-size:16px; margin:32px 0 10px; font-weight:600;}
+  p{margin:0 0 14px; max-width:840px;}
+  .lead{font-size:16px; color:var(--ink2);}
+  ul{margin:0 0 16px; padding-left:22px; max-width:840px;}
+  li{margin-bottom:7px;}
+  .card{background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:22px 26px; margin:22px 0;}
+  .verdict{background:var(--bg); border:1px solid var(--line); border-left:3px solid var(--ink); border-radius:0 10px 10px 0; padding:20px 24px; margin:22px 0;}
+  .verdict.tank{border-left-color:var(--red);}
+  .verdict.run{border-left-color:var(--amber);}
+  .verdict .lead-in{font-size:13px; color:var(--ink3); margin-bottom:8px;}
+  .verdict strong{font-weight:600;}
+  table{width:100%; border-collapse:collapse; margin:18px 0 24px; font-size:13.5px; background:var(--bg);}
+  th,td{padding:10px 13px; text-align:left; border-bottom:1px solid var(--line); vertical-align:top;}
+  th{font-weight:600; font-size:12.5px; color:var(--ink2); background:var(--bg3); white-space:nowrap;}
+  td.n{font-variant-numeric:tabular-nums; white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  .tag{display:inline-block; font-size:11.5px; padding:2px 8px; border-radius:4px; background:var(--bg3); color:var(--ink2); white-space:nowrap;}
+  .t-red{background:#fbe6e3; color:#a5321f;}
+  .t-amber{background:#fbf0d9; color:#8d5a0c;}
+  .t-green{background:#e2f1e8; color:#14663f;}
+  .t-blue{background:#e3edf7; color:#1a4f85;}
+  .grid2{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px; margin:22px 0;}
+  .mini{background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:18px 20px;}
+  .mini h4{margin:0 0 8px; font-size:14.5px; font-weight:600;}
+  .mini p{font-size:13.5px; color:var(--ink2); margin:0 0 8px;}
+  .kv{display:flex; justify-content:space-between; gap:12px; font-size:13px; padding:5px 0; border-bottom:1px dashed var(--line);}
+  .kv:last-child{border-bottom:none;}
+  .kv span:first-child{color:var(--ink2);}
+  .kv span:last-child{font-variant-numeric:tabular-nums; font-weight:500;}
+  figure{margin:26px 0; background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:22px 24px 18px;}
+  figcaption{font-size:12.5px; color:var(--ink3); margin-top:14px; padding-top:12px; border-top:1px solid var(--line); line-height:1.6;}
+  .src{font-size:12px; color:var(--ink3); margin-top:6px;}
+  .warn{background:#fdf6e3; border:1px solid #ecd9a8; border-radius:10px; padding:16px 20px; font-size:13.5px; margin:20px 0;}
+  .note{font-size:13px; color:var(--ink2); background:var(--bg3); border-radius:8px; padding:12px 16px; margin:16px 0;}
+  code{background:var(--bg3); padding:1.5px 6px; border-radius:4px; font-size:12.5px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
+  .foot{margin-top:60px; padding-top:24px; border-top:1px solid var(--line2); font-size:12.5px; color:var(--ink3);}
+  .toc{background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:16px 22px; margin:26px 0 0; font-size:13.5px;}
+  .toc ol{margin:8px 0 0; padding-left:20px; columns:2; column-gap:32px;}
+  .toc a{color:var(--ink); text-decoration:none; border-bottom:1px solid var(--line2);}
+  .toc a:hover{border-bottom-color:var(--ink);}
+  svg{display:block; max-width:100%; height:auto;}
+  .lgd{display:flex; gap:18px; flex-wrap:wrap; font-size:12.5px; color:var(--ink2); margin-bottom:14px;}
+  .lgd span{display:flex; align-items:center; gap:6px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">游戏赛道调研 · 2026 Q4</div>
+  <h1>经典坦克大战 与 跑酷：市场现状与复刻可行性</h1>
+  <p class="sub">两条都是"规则可复制、护城河不在玩法"的经典赛道。本文用公开榜单数据、平台政策与判例拆解：现在市场上到底是什么局面，以及如果要做，能复刻到什么程度、必须自建什么。</p>
+  <div class="meta">数据截至 2026-10-23 ｜ 榜单快照：MomoRank 2026-09-15 ｜ 平台政策：微信开放文档 / 抖音开放平台 2026-09</div>
+</header>
+
+<div class="toc">
+  <strong style="font-size:13px;color:var(--ink2);">目录</strong>
+  <ol>
+    <li><a href="#s1">核心结论</a></li>
+    <li><a href="#s2">大盘：2026 年小游戏市场基本面</a></li>
+    <li><a href="#s3">坦克大战：已验证过一次的市场</a></li>
+    <li><a href="#s4">跑酷：技术门槛低、供给饱和的工业化品类</a></li>
+    <li><a href="#s5">复刻可行性：五层拆解</a></li>
+    <li><a href="#s6">合规与成本红线</a></li>
+    <li><a href="#s7">创意改造方向</a></li>
+    <li><a href="#s8">行动建议与数据可信度</a></li>
+  </ol>
+</div>
+
+<h2 id="s1"><span class="num">01</span>核心结论</h2>
+
+<div class="grid2">
+  <div class="mini" style="border-left:3px solid var(--red);">
+    <h4>坦克大战：复刻极易，窗口已关</h4>
+    <p>玩法规则层可 100% 照搬——俯视射击、破坏地形、守家、道具掉落，纯规则属"思想范畴"，不受著作权保护（广东高院 2026 判例明确）。</p>
+    <p style="margin-bottom:0;">但品牌层已被腾讯官方占满，且官方自己已用 300 万 DAU 验证过天花板、又因氪金化停服。2026 年 9 月微信/抖音四大榜单里，坦克/射击类<strong>合计 0 席</strong>。</p>
+  </div>
+  <div class="mini" style="border-left:3px solid var(--amber);">
+    <h4>跑酷：复刻极易，窗口半开</h4>
+    <p>技术方案已被行业拆到教科书级（PCG 程序化生成 + 对象池 + 分层碰撞 + 动态难度），复刻门槛近乎为零。1–4 月国内竖版无限跑酷新品上线数同比 +52%。</p>
+    <p style="margin-bottom:0;">但纯跑酷是<strong>买量铺量型生意</strong>，不是留存型生意。榜单上唯一跑酷产品《跃动小子》，本质是重度开箱 RPG，跑酷只是外壳。</p>
+  </div>
+</div>
+
+<div class="verdict">
+  <div class="lead-in">回答"复制程度能有多大"</div>
+  <p style="margin:0; font-size:15px;"><strong>能复制的是玩法规则和数值结构（90%+），不能复制的是流量入口和品牌心智（&lt;30%）。</strong>这两条赛道的真实瓶颈都不在"能不能做出来"，而在"做出来之后凭什么被打开"。坦克大战缺的是流量机制，跑酷缺的是留存结构。</p>
+</div>
+
+<h2 id="s2"><span class="num">02</span>大盘：2026 年小游戏市场基本面</h2>
+
+<p class="lead">先说清盘子有多大，因为两个赛道的所有判断都要放在这个量级上看。</p>
+
+<table>
+<thead><tr><th>指标</th><th>数值</th><th>口径 / 时点</th></tr></thead>
+<tbody>
+<tr><td>微信小游戏 MAU</td><td class="n">&gt; 5 亿</td><td>2026 微信小游戏开发者大会，截至 2026-03</td></tr>
+<tr><td>微信小游戏开发者规模</td><td class="n">&gt; 50 万</td><td>同上</td></tr>
+<tr><td>DAU 破百万的小游戏</td><td class="n">&gt; 80 款</td><td>同上</td></tr>
+<tr><td>季度流水破千万的小游戏</td><td class="n">300 款</td><td>同上</td></tr>
+<tr><td>微信用户结构</td><td class="n">女 47% / 男 53%</td><td>24 岁以下 10%、24–40 岁 50%、40 岁以上 40%</td></tr>
+<tr><td>抖音小游戏 DAU 同比</td><td class="n">+130%</td><td>巨量引擎 2026 H1，流水同比 +140%、上架游戏数 +96%</td></tr>
+<tr><td>抖音游戏兴趣用户</td><td class="n">1.7 亿+</td><td>同比 +34%；游戏广告转化用户同比 +130%</td></tr>
+<tr><td>小游戏买量大盘：AI 创作素材占比</td><td class="n">46%</td><td>DataEye 2026-09；常规素材 48%。微信端 AI 素材仅约 5%，仍处低位</td></tr>
+<tr><td>全球休闲游戏 CPI 同比</td><td class="n">+30%</td><td>Casual iOS $1.41 / Android $0.14；全球混合均值 $0.56</td></tr>
+<tr><td>全球手游新品成功率</td><td class="n">0.33%</td><td>2026 H1，卖量成本上涨倒逼 AI 提效与单品深耕</td></tr>
+</tbody>
+</table>
+
+<div class="note"><strong>关键结构性判断：</strong>抖音端流水增速（+140%）显著快于上架数增速（+96%），意味着供给端还没跑赢需求端，仍有结构性红利。但同时 CPI 同比 +30%、全球新品成功率仅 0.33%——<strong>红利属于会买量的团队，不属于纯抄玩法的团队</strong>。</div>
+
+<h3>四大榜单的品类构成</h3>
+
+<figure>
+  <div class="lgd">
+    <span><span style="width:11px;height:11px;border-radius:2px;background:#85b7eb;display:inline-block;"></span>休闲益智 / 消除</span>
+    <span><span style="width:11px;height:11px;border-radius:2px;background:#1d9e75;display:inline-block;"></span>模拟经营 / SLG</span>
+    <span><span style="width:11px;height:11px;border-radius:2px;background:#888780;display:inline-block;"></span>策略 / 塔防</span>
+    <span><span style="width:11px;height:11px;border-radius:2px;background:#ef9f27;display:inline-block;"></span>角色扮演 / 放置</span>
+    <span><span style="width:11px;height:11px;border-radius:2px;background:#d4537e;display:inline-block;"></span>跑酷</span>
+  </div>
+  <svg viewBox="0 0 680 262" role="img" aria-label="微信与抖音四大小游戏榜单Top10的品类构成堆叠条形图">
+    <g font-family="-apple-system,PingFang SC,sans-serif" font-size="12">
+      <!-- row helper: bar x0=200 width=420 for 10 seats => 42/seat -->
+      <g transform="translate(0,10)">
+        <text x="188" y="26" text-anchor="end" fill="#5f5e5a">微信畅销榜</text>
+        <rect x="200" y="14" width="42" height="24" fill="#85b7eb"/><rect x="242" y="14" width="252" height="24" fill="#1d9e75"/>
+        <rect x="494" y="14" width="126" height="24" fill="#888780"/>
+        <text x="632" y="30" fill="#8a8982" font-size="11">10</text>
+      </g>
+      <g transform="translate(0,66)">
+        <text x="188" y="26" text-anchor="end" fill="#5f5e5a">抖音畅销榜</text>
+        <rect x="200" y="14" width="84" height="24" fill="#85b7eb"/><rect x="284" y="14" width="126" height="24" fill="#1d9e75"/>
+        <rect x="410" y="14" width="84" height="24" fill="#888780"/><rect x="494" y="14" width="84" height="24" fill="#ef9f27"/>
+        <rect x="578" y="14" width="42" height="24" fill="#d4537e"/>
+      </g>
+      <g transform="translate(0,122)">
+        <text x="188" y="26" text-anchor="end" fill="#5f5e5a">微信畅玩榜</text>
+        <rect x="200" y="14" width="336" height="24" fill="#85b7eb"/><rect x="536" y="14" width="42" height="24" fill="#888780"/>
+        <rect x="578" y="14" width="42" height="24" fill="#ef9f27"/>
+      </g>
+      <g transform="translate(0,178)">
+        <text x="188" y="26" text-anchor="end" fill="#5f5e5a">抖音热门榜</text>
+        <rect x="200" y="14" width="126" height="24" fill="#85b7eb"/><rect x="326" y="14" width="210" height="24" fill="#1d9e75"/>
+        <rect x="536" y="14" width="42" height="24" fill="#888780"/><rect x="578" y="14" width="42" height="24" fill="#ef9f27"/>
+      </g>
+      <!-- baseline -->
+      <line x1="200" y1="222" x2="620" y2="222" stroke="#cbc9c0" stroke-width="0.5"/>
+      <text x="200" y="240" fill="#8a8982" font-size="11" text-anchor="middle">0</text>
+      <text x="410" y="240" fill="#8a8982" font-size="11" text-anchor="middle">5</text>
+      <text x="620" y="240" fill="#8a8982" font-size="11" text-anchor="middle">10 席</text>
+    </g>
+  </svg>
+  <figcaption><strong>读图：</strong>四张榜单合计 40 席，坦克/射击类 <strong>0 席</strong>；跑酷仅 1 席（抖音畅销榜《跃动小子》）。榜单已被"模拟经营/SLG + 消除 + 塔防"三足鼎立瓜分——轻量竞技与复古向产品在头部几乎无位置。<span class="src">数据源：MomoRank 实时榜，2026-09-15 抓取。</span></figcaption>
+</figure>
+
+<h2 id="s3"><span class="num">03</span>坦克大战：一条已被完整验证过的赛道</h2>
+
+<p class="lead">这是本次调研中最重要的发现：坦克大战不是"没人做的蓝海"，而是"腾讯官方做过一遍、做到 300 万 DAU、然后退出了"的赛道。市场空缺不是机会信号，是验证后的退出信号。</p>
+
+<h3>完整生命周期</h3>
+
+<figure>
+  <svg viewBox="0 0 680 232" role="img" aria-label="经典坦克大战从1985年FC原版到2026年复刻小作的生命周期时间线">
+    <g font-family="-apple-system,PingFang SC,sans-serif">
+      <line x1="60" y1="112" x2="628" y2="112" stroke="#cbc9c0" stroke-width="1"/>
+      <!-- points: 1985 x=92, 2018.01 x=205, 2018.02 x=278, 2020 x=352, 2022 x=440, 2026 x=600 -->
+      <g fill="#1d7a4c">
+        <circle cx="92" cy="112" r="5"/><circle cx="205" cy="112" r="6"/><circle cx="278" cy="112" r="6"/>
+      </g>
+      <g fill="#b57514">
+        <circle cx="352" cy="112" r="5"/><circle cx="440" cy="112" r="5"/>
+      </g>
+      <circle cx="600" cy="112" r="6" fill="#c0392b"/>
+
+      <text x="92" y="66" text-anchor="middle" fill="#1d1d1b" font-size="12" font-weight="600">1985</text>
+      <text x="92" y="82" text-anchor="middle" fill="#5f5e5a" font-size="11">南梦宫 FC《坦克大战》</text>
+      <text x="92" y="96" text-anchor="middle" fill="#8a8982" font-size="11">Battle City</text>
+
+      <text x="205" y="152" text-anchor="middle" fill="#1d1d1b" font-size="12" font-weight="600">2018.01</text>
+      <text x="205" y="168" text-anchor="middle" fill="#5f5e5a" font-size="11">微信官方上线</text>
+      <text x="205" y="182" text-anchor="middle" fill="#8a8982" font-size="11">单群+&lt;1000 种子</text>
+
+      <text x="290" y="66" text-anchor="middle" fill="#1d1d1b" font-size="12" font-weight="600">2018 春节</text>
+      <text x="290" y="82" text-anchor="middle" fill="#5f5e5a" font-size="11">同时在线峰值</text>
+      <text x="290" y="96" text-anchor="middle" fill="#8a8982" font-size="11">2800 万人/小时</text>
+
+      <text x="368" y="152" text-anchor="middle" fill="#1d1d1b" font-size="12" font-weight="600">2018–2021</text>
+      <text x="368" y="168" text-anchor="middle" fill="#5f5e5a" font-size="11">氪金化 · 体验劣化</text>
+      <text x="368" y="182" text-anchor="middle" fill="#8a8982" font-size="11">平民玩家流失</text>
+
+      <text x="452" y="66" text-anchor="middle" fill="#1d1d1b" font-size="12" font-weight="600">2022</text>
+      <text x="452" y="82" text-anchor="middle" fill="#5f5e5a" font-size="11">玩家流失后停服</text>
+      <text x="452" y="96" text-anchor="middle" fill="#8a8982" font-size="11">《欢乐坦克大战》已停运</text>
+
+      <text x="600" y="152" text-anchor="middle" fill="#1d1d1b" font-size="12" font-weight="600">2026.09</text>
+      <text x="600" y="168" text-anchor="middle" fill="#5f5e5a" font-size="11">四大榜单 0 席</text>
+      <text x="600" y="182" text-anchor="middle" fill="#8a8982" font-size="11">仅剩小厂复刻作</text>
+    </g>
+  </svg>
+  <figcaption><strong>关键节点：</strong>微信官方《坦克大战》2018 年 1 月上线，仅用一个群、导入不到 1000 个种子用户，靠社交病毒传播做到 300 万 DAU；30%–40% 用户来自社交分享。官方另一款《欢乐坦克大战》用 Cocos Creator V1.6.1 在约一个月内完成单机 + 3V3 实时对战开发（WebSocket + JSON，C/S 同步架构），但最终因氪金破坏平衡导致停服。</figcaption>
+</figure>
+
+<h3>当前市场的坦克类供给</h3>
+
+<table>
+<thead><tr><th>产品</th><th>形态</th><th>状态与判断</th></tr></thead>
+<tbody>
+<tr><td>《欢乐坦克大战》(腾讯)</td><td>微信小程序，3V3 实时对战</td><td><span class="tag t-red">已停运</span> 百度百科明确标注运营状态为已停运</td></tr>
+<tr><td>《经典 90 坦克大战》</td><td>标榜 FC 原版 100% 复刻，36 关 / 12 种主题地形</td><td>典型复刻小厂产品，无榜单席位</td></tr>
+<tr><td>《像素坦克大战》《坦克大战 FC》《90 坦克联机》</td><td>移植 / 联机改造</td><td>题材早已被穷尽，一个 Flash 专题曾收录 423 个同类游戏</td></tr>
+<tr><td>《坦克大战 OL》</td><td>FC 玩法 + RPG 养成 + 千人混战</td><td><span class="tag t-blue">演化方向</span> 靠重度养成对抗同质化</td></tr>
+<tr><td>《坦克大战电击作战》(Happymeal)</td><td>万代南梦宫 IP 开放计划授权</td><td>60 关 + 二维码分享自制关卡，海外日区</td></tr>
+<tr><td>《像素坦克》</td><td>跑酷 + 坦克战斗融合</td><td><span class="tag t-blue">融合方向</span> 说明"坦克"这个壳子需要靠玩法嫁接才能活</td></tr>
+</tbody>
+</table>
+
+<div class="verdict tank">
+  <div class="lead-in">坦克大战赛道的真实判断</div>
+  <p style="margin:0;">技术门槛已经低到不能再低（Cocos 一个月出成品，官方原案可查），但三重壁垒同时关着门：<strong>①品牌</strong>——"坦克大战"心智被腾讯官方占满，且腾讯当年已把这条链路的传播机制玩到极致（1000 种子 → 300 万 DAU），你没有更优解；<strong>②流量</strong>——依赖微信关系链裂变，属于一次性红利，用完即逝；<strong>③商业化</strong>——实时对战意味着服务器与匹配成本，而纯 IAA 又撑不起付费墙，一氪化就复现官方的停服剧本。</p>
+</div>
+
+<h2 id="s4"><span class="num">04</span>跑酷：技术门槛近乎为零，供给却已饱和</h2>
+
+<p class="lead">跑酷是"最容易复制"和"最难赚钱"同时成立的品类。这两件事必须一起看。</p>
+
+<div class="grid2">
+  <div class="mini">
+    <h4>全球天花板：《地铁跑酷》</h4>
+    <div class="kv"><span>MAU</span><span>1 亿 – 1.5 亿</span></div>
+    <div class="kv"><span>累计下载</span><span>48–49 亿</span></div>
+    <div class="kv"><span>日新增安装</span><span>约 100 万</span></div>
+    <div class="kv"><span>2025 年收入</span><span>约 $9800 万</span></div>
+    <div class="kv"><span>广告收入占比</span><span>约 90%</span></div>
+    <div class="kv"><span>买量投入</span><span>近乎为零</span></div>
+    <div class="kv"><span>团队规模</span><span>125–130 人</span></div>
+    <p style="margin:12px 0 0;font-size:12.5px;color:var(--ink3);">CEO Mathias GredalNørvig 2026-10 访谈。15 年、49 亿下载、每天约 100 万新增，全靠产品与自然传播，几乎不投放。续作《地铁跑酷：城市》上线 6 个月下载 4000–5000 万。</p>
+  </div>
+  <div class="mini">
+    <h4>国内现状</h4>
+    <div class="kv"><span>竖版无限跑酷新品上线数</span><span>同比 +52%</span></div>
+    <div class="kv"><span>跑酷类用户日活</span><span>同比 +12.7%</span></div>
+    <div class="kv"><span>跑酷品类下载量</span><span>同比 +18.7%</span></div>
+    <div class="kv"><span>带轻度社交要素产品留存优势</span><span>+18.3 pct</span></div>
+    <div class="kv"><span>跑酷相关开发教程/定制需求搜索</span><span>环比 +117%</span></div>
+    <p style="margin:12px 0 0;font-size:12.5px;color:var(--ink3);">伽马数据 2026 Q1 休闲报告 / 2026 1–6 月品类报告；七麦数据 2026 年 5–7 月监测。神庙逃亡 like 占竖版无限跑酷新品 6 成以上。约 62% 搜索需求集中在"无广告跑酷""高自由度跑酷""联机跑酷"。</p>
+  </div>
+</div>
+
+<h3>复刻跑酷，技术方案已被完全公开</h3>
+
+<p>跑酷之所以门槛最低，是因为它的技术方案早就被拆解并写成了通用教程。三套机制：</p>
+
+<table>
+<thead><tr><th>模块</th><th>公开方案</th><th>效果</th></tr></thead>
+<tbody>
+<tr><td>PCG 程序化生成地图</td><td>赛道 / 障碍 / 金币 / 道具拆成独立预制体块，按预设概率动态拼接，配合对象池回收</td><td>预制 20–30 个地图块，内存占用比静态地图低 70%+，千元机可跑</td></tr>
+<tr><td>分层碰撞检测</td><td>死亡碰撞 &gt; 交互碰撞 &gt; 装饰碰撞，三级优先级判定</td><td>避免 80%+ 误判（同时吃金币与撞障碍时优先判死亡）</td></tr>
+<tr><td>动态难度调节</td><td>实时统计失误率与平均距离，调节后续障碍密度与移动障碍速度</td><td>连续 2 次无失误 → 密度 +3%~5%；连续失误 2 次 → 后续 3 段密度 −10%</td></tr>
+</tbody>
+</table>
+
+<div class="warn"><strong>但供给端已明显过载。</strong>1–4 月国内竖版无限跑酷新品上线数同比 +52%，其中 6 成是神庙逃亡 like。同期 Semalt（2026-09）判定该品类已进入"停滞的克隆体"状态：App Store 的 runner 区域同质化严重，新作只能靠 IP 授权或视觉主题区分，机制层面无结构性演化。这正是"抄玩法"的天花板——复制得出来，但复制出来的东西没有差异。</div>
+
+<h3>唯一跑进榜单的产品，说明了真正的答案</h3>
+
+<p><strong>《跃动小子》</strong>（杭州紫府网络 / 波克城市研发，上海堃冠发行）被归类为"跑酷"，但拆开看是重度开箱养成 RPG：开箱获得装备与角色、天赋系统配 BD，后期叠加魂卡、战魂、卡牌对战、肉鸽、自走棋塔防。跑酷只是它的操作外壳。成绩：</p>
+
+<ul>
+  <li>2025 年 12 月微信小游戏买量百强榜第 1，预估曝光值 81.39 亿</li>
+  <li>常驻微信畅销榜 Top10/Top20，抖音畅销榜一度第 3；2026-09-15 抖音畅销榜第 9（升 6 名）</li>
+  <li>2026-01-05 小程序排行榜第 1</li>
+</ul>
+
+<p>这条路径的代价也写在了案卷里：小游戏激活成本已从几元涨到几十上百元，付费成本破千，只能靠老用户深氪扛 CAC。Light Game 的复盘结论直接点破——<strong>"玩法缝合"路线易被同行快速复刻或换皮，护城河在运营与数值调校而非创意"</strong>。</p>
+
+<h2 id="s5"><span class="num">05</span>复刻可行性：五层拆解</h2>
+
+<p class="lead">把一个游戏拆成五层，逐层看自由度。规则层几乎完全开放，护城河集中在流量与品牌层——这也解释了为什么"抄玩法"是个陷阱。</p>
+
+<figure>
+  <div class="lgd">
+    <span><span style="width:11px;height:11px;border-radius:2px;background:#c0392b;display:inline-block;"></span>坦克大战</span>
+    <span><span style="width:11px;height:11px;border-radius:2px;background:#b57514;display:inline-block;"></span>跑酷</span>
+    <span style="color:var(--ink3);">刻度 0–100 = 该层可被复制的自由度</span>
+  </div>
+  <svg viewBox="0 0 680 300" role="img" aria-label="五层复刻自由度对比条形图：玩法规则层坦克93跑酷96，数值关卡层86与91，品牌IP层12与68，美术资产层28与38，流量机制层26与55">
+    <g font-family="-apple-system,PingFang SC,sans-serif">
+      <!-- gridlines -->
+      <g stroke="#e2e1db" stroke-width="0.5">
+        <line x1="180" y1="14" x2="180" y2="252"/><line x1="285" y1="14" x2="285" y2="252"/>
+        <line x1="390" y1="14" x2="390" y2="252"/><line x1="495" y1="14" x2="495" y2="252"/>
+        <line x1="600" y1="14" x2="600" y2="252"/>
+      </g>
+      <!-- groups: label x=168 anchor end; track x=180 w=420 -->
+      <g>
+        <text x="168" y="26" text-anchor="end" fill="#1d1d1b" font-size="12.5" font-weight="600">品牌 / IP 名称</text>
+        <rect x="180" y="16" width="50.4" height="14" fill="#c0392b" rx="2"/><text x="238" y="27" fill="#5f5e5a" font-size="11">12</text>
+        <rect x="180" y="34" width="285.6" height="14" fill="#b57514" rx="2"/><text x="473" y="45" fill="#5f5e5a" font-size="11">68</text>
+      </g>
+      <g>
+        <text x="168" y="76" text-anchor="end" fill="#1d1d1b" font-size="12.5" font-weight="600">美术 / 音效资产</text>
+        <rect x="180" y="66" width="117.6" height="14" fill="#c0392b" rx="2"/><text x="305" y="77" fill="#5f5e5a" font-size="11">28</text>
+        <rect x="180" y="84" width="159.6" height="14" fill="#b57514" rx="2"/><text x="347" y="95" fill="#5f5e5a" font-size="11">38</text>
+      </g>
+      <g>
+        <text x="168" y="126" text-anchor="end" fill="#1d1d1b" font-size="12.5" font-weight="600">玩法规则 / 系统框架</text>
+        <rect x="180" y="116" width="390.6" height="14" fill="#c0392b" rx="2"/><text x="578" y="127" fill="#5f5e5a" font-size="11">93</text>
+        <rect x="180" y="134" width="403.2" height="14" fill="#b57514" rx="2"/><text x="590" y="145" fill="#5f5e5a" font-size="11">96</text>
+      </g>
+      <g>
+        <text x="168" y="176" text-anchor="end" fill="#1d1d1b" font-size="12.5" font-weight="600">数值 / 关卡 / 经济</text>
+        <rect x="180" y="166" width="361.2" height="14" fill="#c0392b" rx="2"/><text x="549" y="177" fill="#5f5e5a" font-size="11">86</text>
+        <rect x="180" y="184" width="382.2" height="14" fill="#b57514" rx="2"/><text x="570" y="195" fill="#5f5e5a" font-size="11">91</text>
+      </g>
+      <g>
+        <text x="168" y="226" text-anchor="end" fill="#1d1d1b" font-size="12.5" font-weight="600">流量 / 传播机制</text>
+        <rect x="180" y="216" width="109.2" height="14" fill="#c0392b" rx="2"/><text x="297" y="227" fill="#5f5e5a" font-size="11">26</text>
+        <rect x="180" y="234" width="231" height="14" fill="#b57514" rx="2"/><text x="419" y="245" fill="#5f5e5a" font-size="11">55</text>
+      </g>
+      <!-- axis -->
+      <line x1="180" y1="258" x2="600" y2="258" stroke="#cbc9c0" stroke-width="0.5"/>
+      <text x="180" y="274" fill="#8a8982" font-size="11" text-anchor="middle">0</text>
+      <text x="390" y="274" fill="#8a8982" font-size="11" text-anchor="middle">50</text>
+      <text x="600" y="274" fill="#8a8982" font-size="11" text-anchor="middle">100</text>
+      <text x="180" y="292" fill="#8a8982" font-size="11">完全自建</text>
+      <text x="600" y="292" fill="#8a8982" font-size="11" text-anchor="end">照搬即可</text>
+    </g>
+  </svg>
+  <figcaption>规则与数值层接近满分开放（这两层也不需要抄，它们是公开的行业常识）。真正拉开差距的是品牌层（坦克 12 / 跑酷 68）和流量层（26 / 55）。</figcaption>
+</figure>
+
+<h3>法律边界：能抄什么，不能抄什么</h3>
+
+<p>2026 年有三份判例把这块划得相当清楚，且都指向同一个结论——<strong>玩法随便抄，抄到能抢走原作者用户就要赔钱</strong>。</p>
+
+<table>
+<thead><tr><th>案件</th><th>裁判要点</th><th>金额</th></tr></thead>
+<tbody>
+<tr><td>广东高院《万国觉醒》诉《指挥官》（二审）</td><td>卡牌游戏的界面切换缺乏"连续动态画面"，不构成视听作品；<strong>玩法规则、数值体系属思想范畴，不受著作权法保护</strong>。但原产品知名度极高、被告主观上恶意规避研发成本、客观上分流用户抢份额，构成不正当竞争</td><td class="n">判赔 1000 万 + 合理开支 18 万</td></tr>
+<tr><td>新疆高院伊犁州分院案（2026-07-03 调解）</td><td>界面布局、攻击效果、数值体系高度一致的"内核一致、外壳截然不同"式换皮</td><td class="n">调解赔付 20 万</td></tr>
+<tr><td>四川自贸区法院《甄嬛传》案</td><td>以互动玩法为外壳、但系统性使用角色关系与情节指向的，构成侵权；角色、关系、情节不是"免费素材"</td><td class="n">判赔 6 万，二审调解 5 万并下架</td></tr>
+</tbody>
+</table>
+
+<div class="note"><strong>《2026 中国游戏知识产权生态白皮书》的量化描述：</strong>很多中小团队依靠"抄爆款玩法 + 换美术 + 快速买量"盈利，<strong>一款头部产品上线后往往 3 个月内涌现数十款换皮竞品</strong>，快速分流原创产品的用户与收益。美术抄袭在休闲游戏、二次元、小程序游戏中尤为高发，很多产品上线周期不足 1 个月，素材几乎全部来自对头部产品的拆解挪用。</div>
+
+<h2 id="s6"><span class="num">06</span>合规与成本红线</h2>
+
+<p>这部分是"能不能做"的前置条件，也是复刻方案最容易踩坑的地方。2026 年一个重要澄清：所谓"IAA 免版号"并不准确，官方口径是<strong>"代备案"</strong>——由具备资质的出版单位代为履行备案手续，不等于免除出版环节责任。</p>
+
+<table>
+<thead><tr><th>资质</th><th>微信小游戏（个人）</th><th>微信小游戏（企业）</th><th>抖音小游戏（个人/企业）</th><th>原生 APP 手游（企业）</th></tr></thead>
+<tbody>
+<tr><td>营业执照</td><td><span class="tag t-red">需要</span></td><td><span class="tag t-green">需要</span></td><td><span class="tag t-green">需要</span></td><td><span class="tag t-green">需要</span></td></tr>
+<tr><td>软件著作权</td><td><span class="tag t-amber">建议办理</span></td><td><span class="tag t-green">强制</span></td><td><span class="tag t-green">强制</span></td><td><span class="tag t-green">强制</span></td></tr>
+<tr><td>游戏版号（IAP 必办）</td><td><span class="tag t-red">不可开通</span></td><td><span class="tag t-green">强制</span></td><td><span class="tag t-green">强制</span></td><td><span class="tag t-green">强制</span></td></tr>
+<tr><td>平台备案 / ICP 核准</td><td><span class="tag t-green">需要</span></td><td><span class="tag t-green">需要</span></td><td><span class="tag t-green">需要</span></td><td><span class="tag t-amber">应用备案</span></td></tr>
+<tr><td>内购充值权限</td><td><span class="tag t-red">不可开通</span></td><td><span class="tag t-green">可</span></td><td><span class="tag t-green">可</span></td><td><span class="tag t-green">可</span></td></tr>
+</tbody>
+</table>
+
+<div class="grid2">
+  <div class="mini">
+    <h4>包体限制（硬约束）</h4>
+    <div class="kv"><span>微信主包</span><span>≤ 4 MB</span></div>
+    <div class="kv"><span>微信主包 + 分包</span><span>≤ 30 MB</span></div>
+    <div class="kv"><span>抖音整体包</span><span>≤ 20 MB</span></div>
+    <div class="kv"><span>抖音主包</span><span>≤ 4 MB</span></div>
+    <p style="margin:12px 0 0;font-size:12.5px;color:var(--ink3);">资源须走 CDN 按需加载并配置 downloadFile 合法域名。这条约束直接淘汰了"大素材堆料"型复刻方案，也解释了跑酷为何必须走程序化生成。</p>
+  </div>
+  <div class="mini">
+    <h4>激励政策（2026-09 在窗口期）</h4>
+    <div class="kv"><span>微信 IAP 首发激励上限</span><span>2000 万</span></div>
+    <div class="kv"><span>微信 IAA 长线激励</span><span>180 天 × 35%</span></div>
+    <div class="kv"><span>微信轻中度方案</span><span>30 天 × 40%</span></div>
+    <div class="kv"><span>抖音暑期返点（9/30 截止）</span><span>封顶 500 万</span></div>
+    <div class="kv"><span>抖音老产品增量投放</span><span>12% / 封顶 300 万</span></div>
+    <p style="margin:12px 0 0;font-size:12.5px;color:var(--ink3);">注意 9 月 22 日起，微信首发激励金仅限当前游戏投放使用，不能跨游戏转移——多产品矩阵需提前调配。抖音 Q4 新政未发布，存在窗口期。</p>
+  </div>
+</div>
+
+<h2 id="s7"><span class="num">07</span>创意改造方向</h2>
+
+<p class="lead">既然规则层能抄、护城河在别处，那么改造方向就应该是"换掉护城河缺失的那一层"，而不是在玩法层做微创新。下面按可行性排序。</p>
+
+<h3>方向 A：坦克 × 跑酷（融合，而非复刻）</h3>
+<p>《像素坦克》已经验证过这个组合的可行性。逻辑是：坦克战提供"目标感与战术决策"，跑酷提供"操作爽快与低成本关卡生成"，用 PCG 批量生成可破坏地形。差异化点从"还原 FC"转向"每局随机地图 + 双人异步对战"。避开正面竞争，同时保留两个品类最成熟的技术资产。</p>
+
+<h3>方向 B：坦克 × 塔防/建造（补上"留存结构"）</h3>
+<p>榜单数据指向明确——策略/塔防在微信畅销榜占 3 席、模拟经营/SLG 占 6 席。坦克的"守家"内核天然接近塔防的"防守波次"。把"守基地"升级为"建造 + 布局 + 潮汐式关卡"，把一次性通关变成长期经营，直接补上坦克大战当年最缺的长线结构。代价是开发量从 1 个月拉长到 3–6 个月。</p>
+
+<h3>方向 C：跑酷 × 轻度社交（补上留存，也补上素材）</h3>
+<p>伽马数据给了很硬的一条：带轻度社交要素的跑酷产品，留存率比纯单机跑酷高出 18.3 个百分点。且约 62% 的搜索需求集中在"无广告跑酷""高自由度跑酷""联机跑酷"。做法上不必上实时 PVP（成本和匹配是黑洞），用异步影子赛——好友的"幽灵跑者"或最佳路线回放，就足以撑起"明天还来"的理由。7 天内可验证。</p>
+
+<h3>方向 D：跑酷 × 换题材（最低成本试水）</h3>
+<p>行业里跑得最稳的是"肌肉男越撞越大"这类题材——3 秒即懂、素材 CTR 高。但这是买量铺量型打法，需要素材产能和投放能力。若团队没有投放能力，题材换皮只是把饱和度再抬高一档。可作为验证手感与留存的第一周实验，不建议作为终局形态。</p>
+
+<h3>不建议的方向</h3>
+<ul>
+  <li><strong>原样复刻经典 FC 坦克大战</strong>——品牌不可用（腾讯官方 + 万代南梦宫双重占位），流量不可得（关系链红利已用尽），且 423 个 Flash 同类的存量证明无人能从中胜出。</li>
+  <li><strong>纯竖版无限跑酷正面硬刚</strong>——新品上线数同比 +52%、6 成神庙逃亡 like、无 IP 背书时只能靠品牌认知度竞争，而这是新入场者最不具备的资产。</li>
+  <li><strong>实时 3V3 坦克对战</strong>——服务器 + 匹配 + 平衡三件套是持续成本，而官方的失败恰恰发生在"氪金破坏对战体验"这一步。</li>
+</ul>
+
+<h2 id="s8"><span class="num">08</span>行动建议与数据可信度</h2>
+
+<h3>如果要做，建议的落地顺序</h3>
+<table>
+<thead><tr><th>阶段</th><th>动作</th><th>验证指标</th></tr></thead>
+<tbody>
+<tr><td>第 1–2 周</td><td>主体与资质先行：企业主体（内购必需）+ ICP 备案 + 软著；同步提交微信 IAA 代备案材料与抖音备案（平台自动申报）</td><td>备案通过、域名 ICP 备案完成</td></tr>
+<tr><td>第 3–5 周</td><td>跑酷手感原型（PCG + 分层碰撞 + 动态难度），不投流</td><td>次留 ≥ 35%、7 留 ≥ 12%、平均时长 ≥ 8 分钟</td></tr>
+<tr><td>第 6 周</td><td>接入轻度社交（异步影子赛 / 好友排行 / 每周挑战）</td><td>次留提升 ≥ 10 pct（对照伽马基准 18.3 pct 的一半）</td></tr>
+<tr><td>第 7–8 周</td><td>小规模素材测试，AI 素材占比拉到 60%+（行业均值 46%，微信端仅 5%，是明确的效率洼地）</td><td>素材 CTR、激活成本、CPI</td></tr>
+<tr><td>第 9 周起</td><td>达标则申请 IAP 版号（周期 8–12 个月，需提前排期），未达标则保持 IAA 跑长线</td><td>LTV &gt; CAC，广告填充率与 ARPU</td></tr>
+</tbody>
+</table>
+
+<h3>数据可信度分级</h3>
+<table>
+<thead><tr><th>数据类别</th><th>可信度</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>腾讯大会数据（MAU 5 亿 / 80 款 DAU 百万 / 300 款季度千万）</td><td><span class="tag t-green">一手</span></td><td>腾讯官方财报口径</td></tr>
+<tr><td>MomoRank 榜单构成</td><td><span class="tag t-green">一手</span></td><td>2026-09-15 实时抓取的官方榜单快照</td></tr>
+<tr><td>平台政策与包体限制</td><td><span class="tag t-green">一手</span></td><td>微信开放文档 / 抖音开放平台 / Cocos 官方文档</td></tr>
+<tr><td>广州游戏合规资质清单</td><td><span class="tag t-green">一手</span></td><td>2026 现行平台规则整理</td></tr>
+<tr><td>判例（万国觉醒 / 伊犁 / 甄嬛传）</td><td><span class="tag t-green">一手</span></td><td>法院二审判决与调解公告</td></tr>
+<tr><td>地铁跑酷经营数据</td><td><span class="tag t-blue">CEO 访谈</span></td><td>SYBO CEO 2026-10 受访披露，收入为第三方估算（Owler / Business of Apps 口径 $25M–$100M 区间）</td></tr>
+<tr><td>伽马数据 / 七麦数据品类增速</td><td><span class="tag t-blue">第三方机构</span></td><td>经二手渠道转述，方向可信、绝对值需回溯原报告</td></tr>
+<tr><td>易观「跑酷类月活 2.3 亿」</td><td><span class="tag t-amber">谨慎采用</span></td><td>仅见于 SEO 内容站，未见原始报告，量级与「轻松竞技」类目重合度存疑，本报告未采用</td></tr>
+<tr><td>各类"2026 十大排行榜"推荐文</td><td><span class="tag t-red">不采信</span></td><td>多为下载站导流内容，无榜单依据，本报告未作为结论来源</td></tr>
+</tbody>
+</table>
+
+<div class="foot">
+  调研时间：2026-10-23 ｜ 榜单快照：MomoRank 2026-09-15 ｜ 政策快照：微信开放文档 / 抖音开放平台 2026-09<br>
+  结论中的量化分级（可复制度指数等）为基于公开事实的建模判断，非平台官方评分。
+</div>
+
+</div>
+</body>
+</html>

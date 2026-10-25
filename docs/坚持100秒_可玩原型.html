@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>坚持100秒</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;height:100%;background:#0b0d12;color:#e8ecf4;
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",sans-serif;
+    overflow:hidden;user-select:none}
+  #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at 50% 0%,#1a2030 0%,#0b0d12 60%)}
+  #wrap{position:relative;width:100%;max-width:480px;height:100%;max-height:900px;overflow:hidden;
+    background:#0b0d12;box-shadow:0 0 60px rgba(0,0,0,.6)}
+  canvas{display:block;width:100%;height:100%;touch-action:none}
+
+  .panel{position:absolute;inset:0;display:flex;flex-direction:column;padding:22px 20px;
+    background:linear-gradient(180deg,#11141c 0%,#0b0d12 100%);z-index:5;overflow-y:auto}
+  .panel.hidden{display:none}
+  h1{margin:0;font-size:30px;letter-spacing:-.5px;font-weight:800;
+     background:linear-gradient(92deg,#6ee7ff,#a78bfa 55%,#ff8fa3);-webkit-background-clip:text;
+     -webkit-text-fill-color:transparent;background-clip:text}
+  .tagline{color:#8b96ab;font-size:13px;margin:6px 0 2px;letter-spacing:.3px}
+  .h2{font-size:12px;color:#6b7689;letter-spacing:2px;margin:22px 0 10px;font-weight:600}
+  .card{border:1px solid #222836;border-radius:14px;padding:14px;margin-bottom:10px;
+    background:#12161f;position:relative;transition:.18s}
+  .card.sel{border-color:#4a8cff;background:#141c2b;box-shadow:0 0 0 1px #4a8cff inset,0 6px 24px rgba(74,140,255,.12)}
+  .card h3{margin:0 0 3px;font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px}
+  .card p{margin:0;font-size:12px;color:#8b96ab;line-height:1.6}
+  .stats{display:flex;gap:8px;margin-top:11px;flex-wrap:wrap}
+  .stat{flex:1;min-width:62px;background:#1b2130;border-radius:8px;padding:7px 8px;text-align:center}
+  .stat b{display:block;font-size:15px;font-weight:700;color:#dce4f2;font-variant-numeric:tabular-nums}
+  .stat span{font-size:10px;color:#6b7689}
+  .pill{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600;letter-spacing:.3px}
+  .p-blue{background:#1b2c4a;color:#6ee7ff}
+  .p-amber{background:#3a2c14;color:#fbbf24}
+  .p-red{background:#3a1a1f;color:#fb7185}
+  .p-green{background:#13321f;color:#4ade80}
+  .p-purple{background:#261c47;color:#a78bfa}
+  .btn{width:100%;padding:15px;border:0;border-radius:14px;font-size:17px;font-weight:800;
+    color:#08111f;cursor:pointer;font-family:inherit;
+    background:linear-gradient(96deg,#6ee7ff,#a78bfa);box-shadow:0 8px 26px rgba(110,231,255,.22)}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:#1b2130;color:#c3ccdb;box-shadow:none;border:1px solid #2a3244;
+    font-size:14px;padding:12px;font-weight:600}
+  .howto{font-size:12px;color:#7c8798;line-height:1.75}
+  .howto b{color:#b9c4d6;font-weight:600}
+  .row{display:flex;gap:9px}
+  .hint{position:absolute;left:0;right:0;bottom:14px;text-align:center;font-size:11px;color:#4d5768;
+    pointer-events:none}
+  #hud{position:absolute;inset:0;pointer-events:none;z-index:3}
+  #banner{position:absolute;top:74px;left:12px;right:12px;z-index:4;display:none}
+  .ev{padding:11px 13px;border-radius:13px;background:rgba(16,20,28,.92);
+    border:1px solid #2a3244;backdrop-filter:blur(10px);margin-bottom:8px}
+  .ev-top{display:flex;align-items:center;gap:9px}
+  .ev-ic{width:32px;height:32px;border-radius:9px;flex:none;display:flex;align-items:center;
+    justify-content:center;font-size:15px;font-weight:800}
+  .ev-name{font-size:14px;font-weight:700;flex:1}
+  .ev-t{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;color:#fbbf24}
+  .ev-desc{font-size:11px;color:#8b96ab;margin:5px 0 6px}
+  .ev-bar{height:6px;border-radius:4px;background:#222836;overflow:hidden;position:relative}
+  .ev-fill{height:100%;background:linear-gradient(90deg,#6ee7ff,#a78bfa);transition:width .1s;
+    border-radius:4px}
+  .ev-pf{position:absolute;top:-3px;bottom:-3px;width:2px;background:#fbbf24}
+  .ev-pf2{position:absolute;top:-3px;bottom:-3px;width:2px;background:#4ade80}
+  .ev-prog{font-size:11px;color:#9aa5b8;margin-top:5px;font-variant-numeric:tabular-nums}
+  #res .icon{font-size:52px;text-align:center;margin:14px 0 6px}
+  #res h2{margin:0;font-size:26px;font-weight:800;text-align:center}
+  #res .why{text-align:center;font-size:13px;color:#8b96ab;margin:8px 0 20px;line-height:1.6}
+  .rt{width:100%;display:flex;justify-content:space-between;font-size:13px;padding:9px 2px;
+    border-bottom:1px solid #1c2330}
+  .rt span:first-child{color:#8b96ab}
+  .rt span:last-child{font-weight:700;font-variant-numeric:tabular-nums}
+  .best{font-size:12px;color:#6b7689;text-align:center;margin-top:10px}
+</style>
+</head>
+<body>
+<div id="stage"><div id="wrap">
+  <canvas id="cv"></canvas>
+  <div id="hud"></div>
+  <div id="banner"></div>
+
+  <!-- ============ 选赛道 ============ -->
+  <div class="panel" id="menu">
+    <h1>坚持100秒</h1>
+    <div class="tagline">SPRINT 100 · 三条赛道 · 活过100秒即通关</div>
+
+    <div class="h2">选择赛道</div>
+    <div id="tracks"></div>
+
+    <div class="h2">操作</div>
+    <div class="card howto">
+      <b>← →</b> 变道　<b>↑ / 空格</b> 跳跃　<b>↓</b> 滑铲<br>
+      手机：左右滑动变道，上滑跳跃，下滑滑铲<br>
+      <b>撞到障碍</b> 直接失败。速度只增不减——最后10秒是最快的。
+    </div>
+
+    <div class="h2">任务箱</div>
+    <div class="card howto">
+      赛道中会掉落<b style="color:#fbbf24">金色任务箱</b>，撞上即触发限时任务
+      （9–15秒）。<b>任务未完成＝本局失败</b>。<br>
+      任务箱是<b>可选的</b>——但赛道2需完成 <b>2 次</b>、赛道3需完成 <b>3 次</b>才算通关。
+    </div>
+    <div style="height:8px"></div>
+  </div>
+
+  <!-- ============ 结算 ============ -->
+  <div class="panel hidden" id="res">
+    <div class="icon" id="ricon"></div>
+    <h2 id="rtitle"></h2>
+    <div class="why" id="rwhy"></div>
+    <div id="rstats"></div>
+    <div style="height:18px"></div>
+    <div class="row">
+      <button class="btn ghost" id="bRevive" style="display:none">复活</button>
+      <button class="btn" id="bAgain">再来一局</button>
+    </div>
+    <button class="btn ghost" id="bMenu" style="margin-top:9px">换赛道</button>
+    <div class="best" id="rbest"></div>
+  </div>
+
+  <div class="hint" id="hint">← → 变道　↑ 跳　↓ 滑铲　ESC 暂停</div>
+</div></div>
+
+<script>
+"use strict";
+/* ============================================================
+   坚持100秒 — 可玩原型
+   三赛道：L1 纯加速 / L2 半速+事件 / L3 满速+事件叠加
+   ============================================================ */
+
+const T = 100;            // 通关时长（秒）
+const ZREF = 22;          // 透视参考距离
+const FAR = 120;          // 可视距离(m)
+const LANES = 3;
+
+/* ---------- 赛道定义 ---------- */
+const TRACKS = [
+  { id:1, key:'L1', name:'赛道1 · 晨曦', tag:'纯加速', pill:'p-blue', icon:'☀',
+    desc:'全程持续加速，无事件。纯反应考卷——只考验你的手速与预判。',
+    v0:8, a:0.12, gap:15, gapGrow:0.18, coins:0.278, eventSlots:[], needEvents:0,
+    comboCap:4.0, shield:0, accel:1.0, density:1.0,
+    stats:['末速 20m/s','反应窗 0.89s','距离 1397m'] },
+
+  { id:2, key:'L2', name:'赛道2 · 霓虹', tag:'半速 + 任务', pill:'p-amber', icon:'◈',
+    desc:'加速度只有赛道1的一半，但途中掉落任务箱。加减速更缓，却要分神。',
+    v0:8, a:0.06, gap:18, gapGrow:0.18, coins:0.278,
+    eventSlots:[20,38,55,72,88], needEvents:2,
+    comboCap:3.0, shield:1, accel:1.0, density:1.0,
+    stats:['末速 14m/s','反应窗 1.52s','需完成 2 次任务'] },
+
+  { id:3, key:'L3', name:'赛道3 · 熔岩', tag:'满速 + 叠加', pill:'p-red', icon:'▲',
+    desc:'满速持续加速，任务期间额外加速 8%；六个任务投放点需完成两个。',
+    v0:8, a:0.12, gap:17, gapGrow:0.18, coins:0.278,
+    eventSlots:[18,34,50,64,78,90], needEvents:2,
+    comboCap:3.0, shield:1, accel:1.08, density:1.0, stack:true,
+    stats:['末速 21.6m/s','反应窗 0.94s','需完成 2 次任务'] },
+];
+
+/* ---------- 事件库（20个，五类） ----------
+   cat: collect 收集 / skill 技巧 / reverse 反向 / survive 生存 / econ 收益
+   prot: 生成器保障机制  none 无 / invuln 无敌 / coins 金币带 / combo 连击带
+   dens: 障碍密度倍率
+   types: 限制生成的障碍类型
+*/
+const EVENTS = [
+  // ---------- 收集类 ----------
+  {id:'coin10', cat:'collect', catName:'收集', icon:'●', name:'金币冲刺', dur:10,
+   desc:'10秒内收集22颗金币', pass:{L2:22,L3:28}, perfect:{L2:34,L3:44}, reward:400,
+   prot:'coins', dens:1.43, type:'coins'},
+  {id:'coin15', cat:'collect', catName:'收集', icon:'●', name:'金币长跑', dur:15,
+   desc:'15秒内收集32颗金币', pass:{L2:32,L3:40}, perfect:{L2:48,L3:60}, reward:600,
+   prot:'coins', dens:1.43, type:'coins'},
+  {id:'magnet', cat:'collect', catName:'收集', icon:'◎', name:'磁石大赏', dur:12,
+   desc:'12秒内收集3颗磁石', pass:{L2:3,L3:4}, perfect:{L2:5,L3:7}, reward:450,
+   prot:'coins', dens:1.4, type:'magnet'},
+  {id:'hold', cat:'collect', catName:'收集', icon:'H', name:'拼出 HOLD', dur:12,
+   desc:'12秒内集齐 H·O·L·D 四个字母', pass:{L2:4,L3:4}, perfect:{L2:6,L3:6}, reward:500,
+   prot:'coins', dens:1.35, type:'letter'},
+  {id:'bigcoin', cat:'collect', catName:'收集', icon:'◆', name:'精准拾金', dur:12,
+   desc:'12秒内收集12颗大金币（普通金币不计分）', pass:{L2:12,L3:16}, perfect:{L2:20,L3:26}, reward:550,
+   prot:'coins', dens:1.4, type:'big'},
+
+  // ---------- 技巧类 ----------
+  {id:'jump', cat:'skill', catName:'技巧', icon:'↑', name:'腾空连跳', dur:10,
+   desc:'10秒内完成8次跳跃', pass:{L2:8,L3:10}, perfect:{L2:12,L3:15}, reward:350,
+   prot:'none', dens:1.25, type:'action'},
+  {id:'slide', cat:'skill', catName:'技巧', icon:'↓', name:'贴地滑铲', dur:10,
+   desc:'10秒内完成6次滑铲', pass:{L2:6,L3:8}, perfect:{L2:9,L3:12}, reward:350,
+   prot:'none', dens:1.25, type:'action'},
+  {id:'lane', cat:'skill', catName:'技巧', icon:'↔', name:'连续变道', dur:10,
+   desc:'10秒内变道10次', pass:{L2:10,L3:13}, perfect:{L2:15,L3:20}, reward:400,
+   prot:'none', dens:1.25, type:'action'},
+  {id:'dodge', cat:'skill', catName:'技巧', icon:'✦', name:'闪避零失误', dur:12,
+   desc:'12秒内闪避6个障碍', pass:{L2:6,L3:9}, perfect:{L2:10,L3:14}, reward:500,
+   prot:'none', dens:1.15, type:'dodge'},
+
+  // ---------- 反向类（"开摆"系列）----------
+  {id:'idle', cat:'reverse', catName:'反向', icon:'◌', name:'开摆躺平', dur:9,
+   desc:'9秒内不要按任何操作键——松手就输', pass:{L2:1,L3:1}, perfect:{L2:1,L3:1},
+   passTxt:'坚持9秒不操作', perfectTxt:'9秒不操作且没吃金币', reward:500,
+   prot:'invuln', dens:99, type:'idle'},
+  {id:'nogold', cat:'reverse', catName:'反向', icon:'○', name:'戒断金币', dur:10,
+   desc:'10秒内一颗金币都不许碰（金币会铺满一条道）', pass:{L2:1,L3:1}, perfect:{L2:1,L3:1},
+   passTxt:'10秒零金币', perfectTxt:'零金币且变道≥6次', reward:450,
+   prot:'coins', dens:1.3, type:'nogold'},
+  {id:'oneway', cat:'reverse', catName:'反向', icon:'◐', name:'单侧通行', dur:12,
+   desc:'12秒内只准用一个方向变道', pass:{L2:1,L3:1}, perfect:{L2:1,L3:1},
+   passTxt:'不混用左右', perfectTxt:'不混用且变道≥6次', reward:550,
+   prot:'invuln', dens:1.6, type:'oneway'},
+  {id:'holdlane', cat:'reverse', catName:'反向', icon:'▮', name:'定点守株', dur:10,
+   desc:'10秒内守住指定车道不许离开', pass:{L2:1,L3:1}, perfect:{L2:1,L3:1},
+   passTxt:'10秒不离车道', perfectTxt:'10秒不离且零变道', reward:400,
+   prot:'invuln', dens:1.5, types:['jump','block','train'], type:'staylane'},
+
+  // ---------- 生存类 ----------
+  {id:'shield', cat:'survive', catName:'生存', icon:'⬢', name:'护盾不破', dur:10,
+   desc:'10秒内护盾不被击碎（可硬吃3下）', pass:{L2:1,L3:1}, perfect:{L2:1,L3:1},
+   passTxt:'10秒后护盾仍在', perfectTxt:'10秒零碰撞', reward:500,
+   prot:'shield', dens:1.0, type:'shield'},
+  {id:'air', cat:'survive', catName:'生存', icon:'⌃', name:'腾空达人', dur:12,
+   desc:'12秒内尽量多滞空（≥3.5秒达标）', pass:{L2:3.5,L3:3.5}, perfect:{L2:5.0,L3:5.0},
+   prot:'none', dens:1.67, type:'air'},
+  {id:'ground', cat:'survive', catName:'生存', icon:'⌄', name:'贴地巡航', dur:12,
+   desc:'12秒内贴地累计≥9秒', pass:{L2:9,L3:9}, perfect:{L2:11,L3:11},
+   prot:'none', dens:1.15, types:['block','train'], type:'ground'},
+  {id:'dense', cat:'survive', catName:'生存', icon:'▦', name:'密集穿梭', dur:12,
+   desc:'12秒高密度障碍——活下来就行', pass:{L2:1,L3:1}, perfect:{L2:1,L3:1},
+   passTxt:'活过12秒', perfectTxt:'零碰撞穿过', reward:700,
+   prot:'none', dens:0.5, type:'dense'},
+
+  // ---------- 收益类 ----------
+  {id:'combo', cat:'econ', catName:'收益', icon:'≡', name:'连击不断', dur:10,
+   desc:'10秒内连击数始终≥5', pass:{L2:5,L3:5}, perfect:{L2:8,L3:8},
+   passTxt:'连击不低于5', perfectTxt:'连击不低于8', reward:600,
+   prot:'combo', dens:1.25, type:'combo'},
+  {id:'double', cat:'econ', catName:'收益', icon:'×', name:'双倍收益', dur:12,
+   desc:'12秒内金币双倍，攒够60点', pass:{L2:60,L3:75}, perfect:{L2:85,L3:105}, reward:550,
+   prot:'coins', dens:1.35, type:'double'},
+  {id:'strip', cat:'econ', catName:'收益', icon:'▤', name:'完美吃光', dur:12,
+   desc:'12秒内吃完整条20枚金币走廊（≥18枚达标）', pass:{L2:18,L3:18}, perfect:{L2:20,L3:20},
+   passTxt:'吃满18枚', perfectTxt:'20/20 全吃且连击≥10', reward:800,
+   prot:'coins', dens:1.43, type:'strip'},
+];
+
+const CAT_COLOR = {
+  collect:'#fbbf24', skill:'#6ee7ff', reverse:'#a78bfa', survive:'#fb7185', econ:'#4ade80'
+};
+
+/* ============================================================
+   状态
+   ============================================================ */
+let cv, ctx, W, H, DPR=1;
+let G = null;          // 游戏状态
+let raf = 0, lastT = 0;
+let best = JSON.parse(localStorage.getItem('s100_best')||'{}');
+let paused = false, pausePanel=null;
+
+function initCanvas(){
+  cv = document.getElementById('cv');
+  ctx = cv.getContext('2d');
+  resize();
+  window.addEventListener('resize',resize);
+}
+function resize(){
+  const wrap = document.getElementById('wrap');
+  DPR = Math.min(window.devicePixelRatio||1,2);
+  W = wrap.clientWidth; H = wrap.clientHeight;
+  cv.width = W*DPR; cv.height = H*DPR;
+  cv.style.width = W+'px'; cv.style.height = H+'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+
+/* ============================================================
+   菜单
+   ============================================================ */
+function renderMenu(){
+  const box = document.getElementById('tracks');
+  box.innerHTML = '';
+  TRACKS.forEach(t=>{
+    const b = best[t.key]||0;
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.innerHTML = `
+      <h3>${t.icon} ${t.name}<span class="pill ${t.pill}">${t.tag}</span></h3>
+      <p>${t.desc}</p>
+      <div class="stats">
+        ${t.stats.map(s=>`<div class="stat"><b>${s.split(' ')[0]}</b><span>${s.split(' ').slice(1).join(' ')}</span></div>`).join('')}
+        <div class="stat"><b>${b||'—'}</b><span>最高分</span></div>
+      </div>`;
+    el.onclick = ()=>startGame(t);
+    box.appendChild(el);
+  });
+}
+
+/* ============================================================
+   开局
+   ============================================================ */
+function startGame(t){
+  G = {
+    trk:t, t:0, dist:0, v:t.v0, alive:true, won:false, failed:null,
+    lane:1, prevLane:1,
+    jumpT:-1, slideT:-1, airTime:0, groundTime:0,
+    score:0, coins:0, combo:0, comboT:-99, maxCombo:0,
+    objects:[], spawnAt:0, coinNext:0, stripMade:false, stripLane:-1, avoidLane:-1,
+    evIdx:0, evActive:null, evPending:0,
+    eventsDone:0, eventsPerfect:0, eventsMissed:0,
+    lastInput:-99, dirUsed:new Set(), laneChanges:0, jumps:0, slides:0,
+    dodges:0, shield:0, shieldMax:0, invulnUntil:-1,
+    evCoin:0, evMag:0, evBig:0, evLetter:new Set(), evJump:0, evSlide:0,
+    evLane:0, evDodge:0, evMinCombo:99, evHit:0, evCoinsAte:0,
+    evAir:0, evGround:0, evPoints:0, evLetterCount:0, evDirUsed:new Set(),
+    stripTotal:0, stripAte:0, targetLane:1, oneWayDir:null,
+    coinValue:1, letterBag:[], usedRevive:false, eventScores:[], msg:null, msgT:0,
+    flash:0, shake:0, shakeT:0
+  };
+  G.shieldMax = t.shield;
+  G.shield = t.shield;
+  document.getElementById('menu').classList.add('hidden');
+  document.getElementById('res').classList.add('hidden');
+  document.getElementById('banner').innerHTML='';
+  document.getElementById('hint').textContent='← → 变道　↑ 跳　↓ 滑铲　ESC 暂停';
+  paused=false;
+  lastT = performance.now();
+  if(!raf) raf = requestAnimationFrame(loop);
+}
+
+/* ============================================================
+   输入
+   ============================================================ */
+function doInput(action){
+  if(!G||!G.alive||paused) return;
+  const ev = G.evActive;
+  const def = ev ? ev.def : null;
+
+  /* --- 反向类任务的输入管控（优先级最高）--- */
+  if(def){
+    if(def.type==='idle'){
+      // 开摆躺平：任何输入都算失败
+      fail('任务失败：你不该按任何键','reverse'); return;
+    }
+    if(def.type==='staylane' && (action==='left'||action==='right')){
+      // 定点守株：离开指定车道即失败
+      fail('任务失败：你离开了指定车道','reverse'); return;
+    }
+    if(def.type==='oneway' && (action==='left'||action==='right')){
+      if(action!==ev.dir){ ev.prog.violation++; fail('任务失败：你用了错误的方向','reverse'); return; }
+    }
+  }
+  G.lastInput = G.t;
+
+  if(action==='left'||action==='right'){
+    const nl = action==='left' ? G.lane-1 : G.lane+1;
+    if(nl<0||nl>=LANES) return;
+    G.lane = nl; G.laneChanges++; G.dirUsed.add(action);
+    if(ev){ ev.prog.lane++; ev.prog.laneDir++; }
+  } else if(action==='jump'){
+    if(G.jumpT<0){ G.jumpT=0; G.jumps++; if(ev) ev.prog.jump++; }
+  } else if(action==='slide'){
+    if(G.slideT<0){ G.slideT=0; G.slides++; if(ev) ev.prog.slide++; }
+  }
+}
+function bindInput(){
+  const keymap={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'jump',ArrowDown:'slide',
+    a:'left',d:'right',w:'jump',s:'slide',' ':'jump'};
+  window.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){ togglePause(); e.preventDefault(); return; }
+    if(e.key==='r'||e.key==='R'){ if(G&&!G.alive) restart(); return; }
+    const a=keymap[e.key]; if(a){ e.preventDefault(); doInput(a); }
+  });
+  // 触摸
+  let tx=0,ty=0,tt=0;
+  cv.addEventListener('touchstart',e=>{ const t=e.touches[0]; tx=t.clientX;ty=t.clientY;tt=Date.now(); },{passive:true});
+  cv.addEventListener('touchend',e=>{
+    const t=e.changedTouches[0]; const dx=t.clientX-tx, dy=t.clientY-ty;
+    if(Date.now()-tt>600) return;
+    if(Math.abs(dx)<24&&Math.abs(dy)<24){ doInput('jump'); return; }
+    if(Math.abs(dx)>Math.abs(dy)) doInput(dx>0?'right':'left');
+    else doInput(dy>0?'slide':'jump');
+  },{passive:true});
+  // 鼠标（桌面调试）
+  cv.addEventListener('mousedown',e=>{
+    const r=cv.getBoundingClientRect(); const x=e.clientX-r.left, y=e.clientY-r.top;
+    if(y>H*0.62){ doInput(x<W/3?'left':x>W*2/3?'right':'jump'); }
+    else doInput('jump');
+  });
+}
+function togglePause(){
+  if(!G||!G.alive) return;
+  paused=!paused;
+  if(paused){ G.msg='已暂停'; G.msgT=G.t; }
+}
+
+/* ============================================================
+   生成器
+   ============================================================ */
+function pickEvDef(){
+  const pool = EVENTS.filter(e=>{
+    if(G.trk.key==='L2') return e.cat!=='econ'||Math.random()<0.5;
+    return true;
+  });
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+// 判断某车道在「玩家决策窗口内」是否被【阻挡型】障碍占用。
+//  - 阻挡型(block/train)：必须换道，占用该道
+//  - 跳跃型(jump)：可跳过去，不算阻塞（否则生成器会无谓避开可用车道）
+//  - 滑铲型(slide)：可滑过去，不算阻塞
+// 窗口取 30m：覆盖玩家反应时间对应的距离（0.89~1.88s × 8~20m/s），
+// 既避免三条道同时堵死，又不至于让生成器过度避让。
+function laneBlocked(l){
+  return G.objects.some(o=>o.kind==='ob'&&o.lane===l&&o.z>0.4&&o.z<30&&
+    (o.otype==='block'||o.otype==='train'));
+}
+function spawnObject(worldZ, kind, lane, opt){
+  G.objects.push(Object.assign({worldZ, kind, lane, z:worldZ-G.dist, got:false}, opt||{}));
+}
+/* 生成器采用「空间游标」：对象一律在玩家前方 SPAWN_AHEAD 米处诞生，
+   再随速度滚向玩家。此前误用 G.dist + gap*0.1 作为生成点，
+   导致 z 起点仅 ~1.5m —— 障碍物「一出生就贴脸」，玩家完全看不见，
+   视觉上像是障碍物没渲染出来。 */
+const SPAWN_AHEAD = 75;   // 障碍生成距离(m)
+const COIN_AHEAD  = 18;   // 拾取物生成距离(m)
+  // 注意：拾取物距离不能太远。任务窗口只有 10~15s，若生成距离 45m，
+  // 10s 任务在低速段只剩 5.4s 有效收集时间（理论上限 44 颗），
+  // 收集类任务的及格线会高到无法达成。18m 可让有效窗口接近满值。
+
+function spawn(){
+  const t=G.trk, ev=G.evActive;
+  // dens 语义 = 「障碍间距倍率」，>1 表示更稀疏。
+  // 任务期间注意力被占用 → 躲避余量必须放宽，否则任务与躲避互斥。
+  // （隔离实验：任务期间撞死占 168/171，此处是 L3 难度失控的直接原因）
+  // dense（密集穿梭）本身就是难度任务，dens=0.5 刻意变密。
+  let dens = t.density*(ev ? ev.def.dens : 1);
+  if(ev && ev.def.types) dens = Math.min(dens,1.5);
+  const gap = (t.gap*(1+t.gapGrow*G.t/T))*dens;
+
+  // 障碍
+  if(G.dist >= G.spawnAt){
+    G.spawnAt = G.dist + gap*(0.85+Math.random()*0.3);
+  // 障碍生成策略（按事件类型）：
+  //  - idle（开摆）  : 100% 无障碍。玩家不许输入，留障碍就是必死陷阱
+  //  - nogold（戒断）: 障碍保留但降密度；金币带所在道不生成阻挡型障碍（保证有路可绕）
+  //  - strip（吃光） : 走廊所在车道无障碍 —— 20 枚金币固定一条道，走廊必须可通行
+  //  - oneway/staylane: 保留障碍但大幅降低密度 —— 躲避决策正是任务内容
+  //  - 其他          : 按 dens 正常生成
+  const noObstacle = ev && ev.def.type==='idle';
+  const stripLane = (ev && ev.def.type==='strip') ? G.stripLane : -1;
+  // nogold 的金币诱饵道同样需要保持可通行
+  const goldLane = (ev && ev.def.type==='nogold') ? G.avoidLane : -1;
+  const keepClear = l => (stripLane>=0 && l===stripLane) || (goldLane>=0 && l===goldLane);
+  if(!noObstacle){
+      const allowed = ev&&ev.def.types ? ev.def.types : null;
+      const r = Math.random();
+      let kind;
+      if(r<0.42) kind='jump';
+      else if(r<0.74) kind='slide';
+      else kind='block';
+      if(ev && ev.def.type==='ground' && kind!=='block') kind='block';
+      if(ev && ev.def.type==='dense' && Math.random()<0.25) kind='train';
+      if(!allowed || allowed.includes(kind)){
+        if(keepClear(G.lane) && false){ /* placeholder */ }
+        const lanePick = ()=>{
+          // 金币带/走廊所在道：完全不生成障碍（任何类型）
+          // 否则玩家会被障碍逼进诱饵道 —— 戒断金币必然失败
+          const opts=[0,1,2].filter(l=>!keepClear(l));
+          return opts.length?opts[Math.floor(Math.random()*opts.length)]:-1;
+        };
+        if(stripLane>=0 && (kind==='block'||kind==='train'||kind==='slide')){
+          // strip 走廊道不生成阻挡型障碍，保证走廊可通行
+        } else if(kind==='block'||kind==='train'){
+          // 保证至少一条车道可通过（并避开金币带/走廊道）
+          const free = [0,1,2].filter(l=>!laneBlocked(l) && !keepClear(l));
+          const pool = free.length?free:[0,1,2].filter(l=>!keepClear(l));
+          if(pool.length){
+            const l = pool[Math.floor(Math.random()*pool.length)];
+            spawnObject(G.dist+SPAWN_AHEAD,'ob',l,{otype:kind});
+          }
+        } else {
+          // 跳/滑类：优先放在非金币带道上，避免与戒断任务形成双重压力
+          const l = lanePick();
+          if(l>=0) spawnObject(G.dist+SPAWN_AHEAD,'ob',l,{otype:kind});
+        }
+      }
+    }
+  }
+  // 金币 / 拾取物
+  const dense = ev && (ev.def.prot==='coins'||ev.def.prot==='combo');
+  if(G.dist >= G.coinNext){
+    G.coinNext = G.dist + (dense?1.2:1.8)*(0.8+Math.random()*0.5);
+    const cz = G.dist + COIN_AHEAD;   // 金币也生成在前方，否则会瞬间被吃掉
+
+    // strip：整条 20 枚金币走廊，一次性生成，不掺其他金币
+    if(ev && ev.def.type==='strip'){
+      if(!G.stripMade){
+        G.stripMade=true; G.stripTotal=20; G.stripAte=0;
+        const lane = Math.floor(Math.random()*3);
+        G.stripLane = lane;
+        for(let i=0;i<20;i++) spawnObject(cz+i*1.25,'coin',lane,{ctype:'coin',val:1});
+      }
+      return;
+    }
+    // nogold：金币整条铺在「诱饵道」，玩家必须变道绕开。
+    // 关键设计：诱饵道在任务开始时就固定（不跟随玩家位置漂移），
+    // 否则玩家为躲障碍变道时会误入诱饵道 —— 两者争夺同一个操作，必然冲突。
+    // 障碍保留但密度已由 dens=99 调整为适中，让玩家在「躲障碍」与「躲金币」间取舍。
+    if(ev && ev.def.type==='nogold'){
+      if(G.avoidLane < 0){
+        // 诱饵道必须是玩家当前所在道以外的一条，且在任务期间固定。
+        // 若选到玩家当前道，开局即注定失败，任务失去意义。
+        const others = [0,1,2].filter(l=>l!==G.lane);
+        G.avoidLane = others[Math.floor(Math.random()*others.length)];
+        G.goldStrip = true;
+      }
+      spawnObject(cz,'coin',G.avoidLane,{ctype:'coin',val:1});
+      return;
+    }
+    // letter：字母袋。集齐 HOLD 后继续生成字母（可重复），冲击完美线
+    if(ev && ev.def.type==='letter'){
+      const need = G.letterBag.filter(c=>!ev.prog.letter.has(c));
+      const bag = need.length ? need : G.letterBag;
+      const ch = bag[Math.floor(Math.random()*bag.length)];
+      // 字母生成在玩家当前道附近，降低收集难度（字母任务本意是拼词而非走位）
+      const lanes = [G.lane, (G.lane+1)%3, (G.lane+2)%3];
+      spawnObject(cz,'letter',lanes[Math.floor(Math.random()*2)],{ch:ch});
+      if(Math.random()<0.4) spawnObject(cz,'coin',Math.floor(Math.random()*3),{ctype:'coin',val:1});
+      return;
+    }
+    // magnet：磁石
+    if(ev && ev.def.type==='magnet'){
+      spawnObject(cz,'magnet',Math.floor(Math.random()*3),{});
+      if(Math.random()<0.3) spawnObject(cz,'coin',Math.floor(Math.random()*3),{ctype:'coin',val:1});
+      return;
+    }
+    // big：大金币（普通金币仍生成但不计任务分）
+    if(ev && ev.def.type==='big'){
+      spawnObject(cz,'coin',Math.floor(Math.random()*3),{ctype:'big',val:3});
+      if(Math.random()<0.45) spawnObject(cz,'coin',Math.floor(Math.random()*3),{ctype:'coin',val:1});
+      return;
+    }
+    // idle（开摆）：不生成障碍，但铺设金币诱饵 —— 玩家想拿分就必须动手，一动就输
+    if(ev && ev.def.type==='idle'){
+      spawnObject(cz,'coin',G.lane,{ctype:'coin',val:1});
+      return;
+    }
+    // 普通情况
+    const lane = Math.floor(Math.random()*3);
+    spawnObject(cz,'coin',lane,{ctype:'coin',val:1});
+    if(Math.random()<0.02) spawnObject(cz,'magnet',lane,{});
+  }
+}
+
+/* ============================================================
+   事件触发
+   ============================================================ */
+function triggerEvent(){
+  // 任务箱：提前 30m 投放到玩家当前所在道。
+  // 设计意图：箱子落在你脚下 → 顺路就接到（默认接任务）；
+  // 想避开就变道 → 主动放弃本次任务。接与不接都是玩家可控的选择。
+  const lane = G.lane;
+  spawnObject(G.dist+30,'box',lane,{otype:'box'});
+}
+function startEvent(def){
+  const pass = def.pass[G.trk.key], perfect = def.perfect[G.trk.key];
+  const ev = {
+    def, name:def.name, t:0, dur:def.dur, pass, perfect,
+    prog:{count:0, lane:0, jump:0, slide:0, dodge:0, coin:0, mag:0, big:0,
+          letter:new Set(), hit:0, ate:0, laneDir:0, air:0, ground:0, violation:0, points:0,
+          letterCount:0},
+    done:false, ok:false, perfectOk:false,
+    minCombo:99, side:null, shieldRestore:G.shield,
+  };
+  if(def.type==='staylane'){ G.targetLane = G.lane; ev.target=G.targetLane; }
+  if(def.type==='oneway'){ G.oneWayDir = Math.random()<0.5?'left':'right'; ev.dir=G.oneWayDir; }
+  if(def.type==='nogold'){ G.avoidLane = -1; G.goldStrip = false; }
+  if(def.type==='shield'){ G.shield = 3; G.shieldMax = 3; }
+  if(def.type==='strip'){ G.stripMade=false; G.stripTotal=20; G.stripAte=0; }
+  if(def.type==='letter'){ G.letterBag=['H','O','L','D']; }
+  if(def.type==='double'){ G.coinValue = 2; }
+  G.evActive = ev;
+  renderBanner();
+  beep(660,0.08);
+}
+function renderBanner(){
+  const box = document.getElementById('banner');
+  const evs = G.evActive? [G.evActive] : [];
+  if(!evs.length){ box.style.display='none'; box.innerHTML=''; return; }
+  box.style.display='block';
+  box.innerHTML = evs.map(ev=>{
+    const c = CAT_COLOR[ev.def.cat];
+    const p = Math.min(1,ev.progCount/ev.pass);
+    const pPass = Math.min(1, ev.pass/Math.max(1,ev.perfect||ev.pass));
+    return `<div class="ev" style="border-color:${c}55">
+      <div class="ev-top">
+        <div class="ev-ic" style="background:${c}22;color:${c}">${ev.def.icon}</div>
+        <div class="ev-name">${ev.name}<span style="font-size:10px;color:#6b7689;font-weight:400;margin-left:6px">${ev.def.catName}</span></div>
+        <div class="ev-t">${Math.max(0,ev.dur-ev.t).toFixed(1)}s</div>
+      </div>
+      <div class="ev-desc">${ev.desc}</div>
+      <div class="ev-bar">
+        <div class="ev-fill" style="width:${p*100}%"></div>
+        <div class="ev-pf" style="left:${pPass*100}%"></div>
+      </div>
+      <div class="ev-prog" id="evprog_${ev.def.id}"></div>
+    </div>`;
+  }).join('');
+}
+function updateProgText(){
+  const ev=G.evActive; if(!ev) return;
+  const el=document.getElementById('evprog_'+ev.def.id); if(!el) return;
+  const d=ev.def;
+  let txt='';
+  switch(d.type){
+    case 'coins': txt=`金币 ${ev.prog.coin} / ${ev.pass}`; break;
+    case 'double': txt=`双倍收益 ${ev.prog.points} / ${ev.pass} 点`; break;
+    case 'combo': txt=`当前连击 ${G.combo}（需始终≥${ev.pass}）`; break;
+    case 'strip': txt=`已吃 ${G.stripAte} / ${ev.pass} 枚`; break;
+    case 'magnet': txt=`磁石 ${ev.prog.mag} / ${ev.pass}`; break;
+    case 'big': txt=`大金币 ${ev.prog.big} / ${ev.pass}`; break;
+    case 'letter': txt=`已集 [${[...ev.prog.letter].join('')}] ${ev.prog.letter.size}/${ev.pass}`; break;
+    case 'action': txt=`跳 ${ev.prog.jump||0}　铲 ${ev.prog.slide||0}　变道 ${ev.prog.lane||0}　（合计 ${(ev.prog.jump||0)+(ev.prog.slide||0)+(ev.prog.lane||0)}/${ev.pass}）`; break;
+    case 'dodge': txt=`闪避 ${ev.prog.dodge} / ${ev.pass}`; break;
+    case 'idle': txt=`已静默 ${ev.t.toFixed(1)}s　勿按任何键`; break;
+    case 'nogold': txt=`误食 ${ev.prog.ate} 颗　需为 0`; break;
+    case 'oneway': txt=`只准向${ev.dir==='left'?'左':'右'}变道　已变道 ${ev.prog.lane||0}`; break;
+    case 'staylane': txt=`守 ${ev.target+1} 号道　离开即失败`; break;
+    case 'shield': txt=`护盾 ${G.shield}/3　被击 ${ev.prog.hit} 次`; break;
+    case 'air': txt=`空中 ${ev.prog.air.toFixed(1)}s / ${ev.pass}s`; break;
+    case 'ground': txt=`贴地 ${ev.prog.ground.toFixed(1)}s / ${ev.pass}s`; break;
+    case 'dense': txt=`剩余 ${Math.max(0,ev.dur-ev.t).toFixed(1)}s　零碰撞即完美`; break;
+  }
+  el.textContent = txt;
+}
+
+/* ============================================================
+   事件判定
+   ============================================================ */
+function evalEvent(){
+  const ev = G.evActive; if(!ev||ev.done) return;
+  const d = ev.def;
+  const remain = ev.dur - ev.t;
+  let ok=false, perfect=false;
+
+  switch(d.type){
+    case 'coins': ok = ev.prog.coin>=ev.pass; perfect = ev.prog.coin>=ev.perfect; break;
+    case 'double': ok = ev.prog.points>=ev.pass; perfect = ev.prog.points>=ev.perfect; break;
+    case 'combo':
+      ev.minCombo = Math.min(ev.minCombo, G.combo);
+      ok = ev.minCombo>=ev.pass; perfect = ev.minCombo>=ev.perfect; break;
+    case 'strip': ok = G.stripAte>=ev.pass; perfect = G.stripAte>=ev.pass&&G.combo>=10; break;
+    case 'magnet': ok = ev.prog.mag>=ev.pass; perfect = ev.prog.mag>=ev.perfect; break;
+    case 'big': ok = ev.prog.big>=ev.pass; perfect = ev.prog.big>=ev.perfect; break;
+    case 'letter': ok = ev.prog.letter.size>=ev.pass && ev.prog.letterCount>=ev.pass;
+                   perfect = ev.prog.letterCount>=ev.perfect; break;
+    case 'action': {
+      const c = (ev.prog.jump||0)+(ev.prog.slide||0)+(ev.prog.lane||0);
+      ok = c>=ev.pass; perfect = c>=ev.perfect; break; }
+    case 'dodge': ok = ev.prog.dodge>=ev.pass; perfect = ev.prog.dodge>=ev.perfect; break;
+    case 'idle': ok = remain<=0; perfect = ok && ev.prog.ate===0; break;
+    case 'nogold': ok = ev.prog.ate===0;
+                   perfect = ok && (ev.prog.lane||0)>=6; break;
+    case 'oneway': ok = ev.prog.violation===0;
+                   perfect = ok && (ev.prog.lane||0)>=6; break;
+    case 'staylane': ok = ev.prog.violation===0 && G.lane===ev.target;
+                     perfect = ok && ev.prog.lane===0; break;
+    case 'shield': ok = G.shield>0; perfect = ok && ev.prog.hit===0; break;
+    case 'air': ok = ev.prog.air>=ev.pass; perfect = ev.prog.air>=ev.perfect; break;
+    case 'ground': ok = ev.prog.ground>=ev.pass; perfect = ev.prog.ground>=ev.perfect; break;
+    case 'dense': ok = remain<=0; perfect = ok && ev.prog.hit===0; break;
+  }
+  // 即时可完成的事件
+  if(d.type==='strip' && G.stripAte>=ev.pass){ ok=true; }
+  if(d.type==='letter' && ev.prog.letter.size>=ev.pass){ ok=true; }
+
+  if(remain<=0 || (ok && (d.type==='strip'||d.type==='letter'))){
+    ev.done=true;
+    if(ok){
+      const base = d.reward;
+      const gain = perfect? Math.round(base*1.5) : base;
+      G.score += gain; G.eventsDone++;
+      if(perfect) G.eventsPerfect++;
+      G.eventScores.push({name:d.name, ok:true, perfect, gain});
+      G.msg = `${d.name} ${perfect?'完美':'达成'} +${gain}`; G.msgT=G.t;
+      beep(perfect?1046:784,0.12);
+      G.evActive=null; renderBanner();
+    } else {
+      fail(`任务失败：${d.name} 未达成`, d.cat);
+    }
+    // 收尾：还原护盾与双倍状态
+    if(d.type==='shield'){ G.shield = ev.shieldRestore; G.shieldMax = G.trk.shield; }
+    if(d.type==='double'){ G.coinValue = 1; }
+    if(d.type==='oneway'){ G.oneWayDir = null; }
+  }
+}
+
+/* ============================================================
+   失败 / 通关
+   ============================================================ */
+function fail(why, cat){
+  if(!G||!G.alive) return;
+  G.alive=false; G.failed=why;
+  G.shake=1; G.flash=1;
+  if(G.evActive && G.evActive.def.type==='shield'){ G.shield=G.evActive.shieldRestore; }
+  if(G.evActive && G.evActive.def.type==='double'){ G.coinValue=1; }
+  beep(180,0.3);
+  setTimeout(()=>showResult(false,why),600);
+}
+function win(){
+  if(!G||!G.alive) return;
+  G.alive=false; G.won=true;
+  // 通关门槛：赛道2需3次任务，赛道3需4次
+  if(G.trk.needEvents>0 && G.eventsDone<G.trk.needEvents){
+    G.failed=`未完成足够任务（${G.eventsDone}/${G.trk.needEvents}）`;
+    setTimeout(()=>showResult(false,G.failed),300);
+    return;
+  }
+  beep(1046,0.25); setTimeout(()=>beep(1318,0.3),180);
+  setTimeout(()=>showResult(true,''),500);
+}
+function showResult(winFlag, why){
+  const k=G.trk.key;
+  const passed = winFlag;
+  if(passed){ if(!best[k]||G.score>best[k]){ best[k]=G.score; localStorage.setItem('s100_best',JSON.stringify(best)); } }
+  document.getElementById('ricon').textContent = passed?'🏁':'💥';
+  document.getElementById('rtitle').textContent = passed?'通关！':'失败';
+  document.getElementById('rwhy').innerHTML = passed
+    ? `你在 <b>${G.trk.name}</b> 坚持了 100 秒`
+    : (why||'未通关');
+  const rows = [
+    ['距离', Math.round(G.dist)+' m'],
+    ['金币', G.coins+' 颗'],
+    ['最高连击', G.maxCombo],
+    ['得分', Math.round(G.score)],
+  ];
+  if(G.trk.needEvents>0) rows.push(['完成任务', `${G.eventsDone}/${G.trk.needEvents}（完美 ${G.eventsPerfect}）`]);
+  if(G.trk.shield) rows.push(['剩余护盾', G.shield]);
+  document.getElementById('rstats').innerHTML = rows.map(r=>
+    `<div class="rt"><span>${r[0]}</span><span>${r[1]}</span></div>`).join('')
+    + (G.eventScores.length? `<div class="rt"><span>任务明细</span><span style="font-size:11px;text-align:right">${G.eventScores.map(e=>e.name+(e.perfect?'★':'')).join(' / ')||'—'}</span></div>`:'');
+  document.getElementById('rbest').textContent = `本赛道最高分：${best[k]||0}`;
+  const rv=document.getElementById('bRevive');
+  rv.style.display = (!passed && !G.usedRevive && G.trk.shield>0 && G.failed && G.failed.indexOf('撞')>=0)?'block':'none';
+  document.getElementById('res').classList.remove('hidden');
+  document.getElementById('hint').style.display='none';
+}
+function restart(){
+  document.getElementById('res').classList.add('hidden');
+  document.getElementById('hint').style.display='block';
+  startGame(G.trk);
+}
+
+/* ============================================================
+   主循环
+   ============================================================ */
+function loop(ts){
+  raf = requestAnimationFrame(loop);
+  const dt = Math.min(0.05,(ts-lastT)/1000); lastT=ts;
+  if(G && G.alive && !paused) update(dt);
+  if(G) render();
+}
+
+function update(dt){
+  const t=G.trk;
+  G.t += dt;
+
+  // 速度：持续加速
+  let acc = t.a * (G.evActive? t.accel : 1);
+  G.v = t.v0 + acc*G.t;
+
+  // 跳跃 / 滑铲计时
+  let airborne=false;
+  if(G.jumpT>=0){ G.jumpT+=dt; if(G.jumpT>0.62){G.jumpT=-1;} else airborne=true; }
+  let sliding=false;
+  if(G.slideT>=0){ G.slideT+=dt; if(G.slideT>0.55){G.slideT=-1;} else sliding=true; }
+  if(airborne) G.airTime+=dt; else G.groundTime+=dt;
+
+  // 连击衰减
+  if(G.t-G.comboT>2.5) G.combo=0;
+
+  // 任务箱触发：按赛道时间表投放，玩家需主动去撞
+  if(G.evIdx < t.eventSlots.length && G.t>=t.eventSlots[G.evIdx] && !G.evActive && G.evPending<=0){
+    triggerEvent();
+    G.evIdx++;
+    G.evPending = 1;   // 本槽位已投放，未接到则跳过
+  }
+
+  // 生成
+  spawn();
+
+  // 推进对象
+  const dv = G.v*dt;
+  G.dist += dv;
+  // 高速时单帧位移可达 1m+，碰撞窗口必须按位移自适应，否则会"穿模"不判死
+  const hitWin = Math.max(0.6, dv*1.2);
+  for(const o of G.objects){
+    o.z -= dv;
+    if(o.kind==='ob'){
+      // 碰撞
+      if(!o.got && o.z<=hitWin && o.z>=-hitWin && o.lane===G.lane){
+        const needJump = o.otype==='jump';
+        const needSlide = o.otype==='slide';
+        const hit = (needJump && !airborne) || (needSlide && !sliding) ||
+                    (o.otype==='block') || (o.otype==='train');
+        if(hit){
+          if(G.t<G.invulnUntil){ /* 无敌帧 */ }
+          else if(G.shield>0){
+            G.shield--; o.got=true; G.invulnUntil=G.t+0.7; G.flash=0.5;
+            if(G.evActive) G.evActive.prog.hit++;
+            beep(320,0.06);
+          } else {
+            o.got=true;
+            if(G.evActive) G.evActive.prog.hit++;
+            fail('撞上了障碍','survive');
+            return;
+          }
+        } else { o.got=true; }
+      }
+      // 闪避计数
+      if(!o.passed && o.z<-hitWin){ o.passed=true; G.dodges++;
+        if(G.evActive&&G.evActive.def.type==='dodge') G.evActive.prog.dodge++; }
+    } else if(o.kind==='coin'){
+      if(!o.got && o.z<=hitWin && o.z>=-hitWin && o.lane===G.lane){
+        // 任务限制：nogold 时不能吃
+        if(G.evActive && G.evActive.def.type==='nogold'){
+          G.evActive.prog.ate++;
+          if(G.evActive.prog.ate===1) fail('任务失败：你还是吃了金币','reverse');
+          return;
+        }
+        if(G.evActive && G.evActive.def.type==='big' && o.ctype!=='big'){
+          // 普通金币不计分，直接跳过
+        } else {
+          o.got=true;
+          const val = (o.val||1)*(G.coinValue||1);
+          G.coins += 1;
+          G.score += val*10;
+          G.combo++; G.comboT=G.t;
+          G.maxCombo=Math.max(G.maxCombo,G.combo);
+          const mult = Math.min(t.comboCap, 1+Math.floor(G.combo/8)*0.5);
+          G.score += val*10*(mult-1);
+          if(G.evActive){
+            const ev=G.evActive;
+            ev.prog.ate++;
+            if(ev.def.type==='coins'||ev.def.type==='combo'||ev.def.type==='strip') ev.prog.coin++;
+            if(ev.def.type==='double') ev.prog.points += val;
+            if(ev.def.type==='big' && o.ctype==='big') ev.prog.big++;
+            if(ev.def.type==='strip') G.stripAte++;
+          }
+          beep(880+Math.min(600,G.combo*20),0.04);
+        }
+      }
+    } else if(o.kind==='magnet'){
+      if(!o.got && o.z<=hitWin && o.z>=-hitWin && o.lane===G.lane){
+        o.got=true; G.score+=150;
+        if(G.evActive&&G.evActive.def.type==='magnet') G.evActive.prog.mag++;
+        if(G.evActive&&(G.evActive.def.type==='coins'||G.evActive.def.type==='combo')) G.evActive.prog.coin++;
+        beep(1200,0.06);
+      }
+    } else if(o.kind==='letter'){
+      if(!o.got && o.z<=hitWin && o.z>=-hitWin && o.lane===G.lane){
+        o.got=true; G.score+=80;
+        if(G.evActive&&G.evActive.def.type==='letter'){
+          G.evActive.prog.letter.add(o.ch);
+          G.evActive.prog.letterCount++;
+        }
+        beep(1046,0.05);
+      }
+    } else if(o.kind==='box'){
+      if(!o.got && o.z<=hitWin && o.z>=-hitWin && o.lane===G.lane){
+        o.got=true;
+        const def = pickEvDef();
+        startEvent(def);
+        G.evPending = 0;
+      } else if(!o.got && o.z < -hitWin){
+        // 箱子被错过 —— 玩家主动选择不接
+        o.got = true; G.evPending = 0; G.eventsMissed++;
+        G.msg='错过任务箱'; G.msgT=G.t;
+      }
+    }
+  }
+  G.objects = G.objects.filter(o=>o.z>-3);
+
+  // 事件推进
+  if(G.evActive){
+    const ev = G.evActive;
+    ev.t += dt;
+    // 空中/贴地时间按"任务期间"累计，而非全局
+    if(airborne) ev.prog.air += dt; else ev.prog.ground += dt;
+    ev.progCount = (ev.prog.coin||0)+(ev.prog.mag||0)+(ev.prog.big||0)
+        +(ev.prog.letter?ev.prog.letter.size:0)
+        +((ev.prog.jump||0)+(ev.prog.slide||0)+(ev.prog.lane||0))
+        +(ev.prog.dodge||0);
+    evalEvent();
+    updateProgText();
+  }
+
+  // 距离分
+  G.score += G.v*dt*1.0;
+
+  if(G.t>=T) win();
+}
+
+/* ============================================================
+   渲染
+   ============================================================ */
+function proj(z){
+  const k = ZREF/(z+ZREF);
+  const horizon = H*0.155;
+  const groundY = H*0.80;
+  return {y: horizon + (groundY-horizon)*k, k};
+}
+function laneX(lane,k){ return W/2 + (lane-1)*(W*0.30)*k; }
+
+function render(){
+  if(!G) return;
+  const t=G.trk;
+  ctx.save();
+  if(G.shake>0){ ctx.translate((Math.random()-.5)*G.shake*10,(Math.random()-.5)*G.shake*10); }
+
+  // 背景
+  const bg = ctx.createLinearGradient(0,0,0,H);
+  if(t.key==='L1'){ bg.addColorStop(0,'#1b2a4a'); bg.addColorStop(.5,'#2d4470'); bg.addColorStop(1,'#101725'); }
+  else if(t.key==='L2'){ bg.addColorStop(0,'#2a1b4d'); bg.addColorStop(.5,'#4a2a6e'); bg.addColorStop(1,'#150e26'); }
+  else { bg.addColorStop(0,'#4a1414'); bg.addColorStop(.5,'#7a2410'); bg.addColorStop(1,'#1c0c08'); }
+  ctx.fillStyle=bg; ctx.fillRect(-20,-20,W+40,H+40);
+
+  // 远景剪影
+  drawSkyline();
+
+  // 地面
+  const gr = ctx.createLinearGradient(0,H*0.155,0,H);
+  if(t.key==='L1'){ gr.addColorStop(0,'#2a3d5c'); gr.addColorStop(1,'#0e1420'); }
+  else if(t.key==='L2'){ gr.addColorStop(0,'#3a2a5e'); gr.addColorStop(1,'#120c20'); }
+  else { gr.addColorStop(0,'#5a2412'); gr.addColorStop(1,'#1a0a06'); }
+  ctx.fillStyle=gr; ctx.fillRect(0,H*0.155,W,H);
+
+  // 速度网格线（体现加速）
+  ctx.strokeStyle = t.key==='L3'?'rgba(255,140,90,.30)':(t.key==='L2'?'rgba(190,140,255,.28)':'rgba(120,200,255,.26)');
+  ctx.lineWidth=1;
+  for(let i=0;i<16;i++){
+    const wz = (Math.floor(G.dist/8)+i)*8;
+    const z = wz-G.dist; if(z<=0) continue;
+    const p=proj(z);
+    ctx.beginPath(); ctx.moveTo(0,p.y); ctx.lineTo(W,p.y); ctx.stroke();
+  }
+  // 车道分隔线
+  for(let l=0;l<LANES-1;l++){
+    for(let i=0;i<16;i++){
+      const wz=(Math.floor(G.dist/8)+i)*8;
+      const z=wz-G.dist; if(z<=0) continue;
+      const p=proj(z), p2=proj(z+8);
+      const x1=laneX(l+0.5,p.k), x2=laneX(l+0.5,p2.k);
+      ctx.strokeStyle='rgba(255,255,255,.16)'; ctx.lineWidth=Math.max(1,p.k*3);
+      ctx.beginPath(); ctx.moveTo(x1,p.y); ctx.lineTo(x2,p2.y); ctx.stroke();
+    }
+  }
+  // 侧墙灯柱
+  for(let i=0;i<12;i++){
+    const wz=(Math.floor(G.dist/16)+i)*16;
+    const z=wz-G.dist; if(z<=0.4) continue;
+    const p=proj(z);
+    const lx=laneX(-0.6,p.k), rx=laneX(2.6,p.k);
+    ctx.fillStyle= t.key==='L1'?'rgba(120,200,255,.22)':(t.key==='L2'?'rgba(190,140,255,.22)':'rgba(255,140,90,.22)');
+    ctx.fillRect(lx-2*p.k, p.y-40*p.k, 3*p.k, 40*p.k);
+    ctx.fillRect(rx-1*p.k, p.y-40*p.k, 3*p.k, 40*p.k);
+  }
+
+  // 对象（远→近）
+  const objs = G.objects.slice().sort((a,b)=>b.z-a.z);
+  for(const o of objs){
+    if(o.z<=0.2) continue;
+    const p=proj(o.z);
+    const x=laneX(o.lane,p.k);
+    drawObj(o,x,p);
+  }
+
+  // 玩家
+  drawPlayer();
+
+  // HUD
+  drawHUD();
+
+  ctx.restore();
+  if(G.flash>0){
+    ctx.fillStyle=`rgba(255,255,255,${G.flash*0.4})`;
+    ctx.fillRect(0,0,W,H);
+    G.flash=Math.max(0,G.flash-0.04);
+  }
+  if(G.shake>0) G.shake=Math.max(0,G.shake-0.05);
+}
+
+function drawSkyline(){
+  const t=G.trk;
+  ctx.fillStyle = t.key==='L1'?'rgba(12,20,38,.72)':(t.key==='L2'?'rgba(18,10,36,.75)':'rgba(30,10,8,.78)');
+  const base=H*0.155;
+  for(let layer=0;layer<2;layer++){
+    const off = (G.dist*(0.06+layer*0.05))%120;
+    for(let i=-1;i<10;i++){
+      const bx=i*60-off;
+      const bw=34+((i*37+layer*13)%26);
+      const bh=30+((i*53+layer*29)%60);
+      ctx.fillRect(bx, base-bh, bw, bh);
+      if(layer===1){
+        ctx.fillStyle='rgba(255,220,140,.10)';
+        for(let r=0;r<3;r++) for(let c=0;c<2;c++){
+          if((i*7+r*3+c*5)%3) ctx.fillRect(bx+5+c*13, base-bh+8+r*15, 5, 7);
+        }
+        ctx.fillStyle = t.key==='L1'?'rgba(12,20,38,.72)':(t.key==='L2'?'rgba(18,10,36,.75)':'rgba(30,10,8,.78)');
+      }
+    }
+  }
+}
+
+function drawObj(o,x,p){
+  const k=p.k;
+  ctx.save();
+  if(o.kind==='ob'){
+    if(o.otype==='jump'){
+      ctx.fillStyle='#ff7a5c';
+      const w=44*k,h=22*k;
+      ctx.fillRect(x-w/2,p.y-h,w,h);
+      ctx.fillStyle='rgba(255,255,255,.35)';
+      ctx.fillRect(x-w/2,p.y-h,w,3*k);
+    } else if(o.otype==='slide'){
+      ctx.fillStyle='#ffc857';
+      const w=52*k,h=14*k;
+      ctx.fillRect(x-w/2,p.y-62*k,w,h);
+      ctx.fillStyle='rgba(255,255,255,.25)';
+      ctx.fillRect(x-w/2,p.y-62*k,w,2.5*k);
+      ctx.strokeStyle='rgba(255,255,255,.35)'; ctx.lineWidth=1.5*k;
+      ctx.beginPath(); ctx.moveTo(x-w/2,p.y-62*k); ctx.lineTo(x-w/2,p.y); ctx.stroke();
+    } else if(o.otype==='block'){
+      ctx.fillStyle='#c2410c';
+      const w=44*k,h=54*k;
+      ctx.fillRect(x-w/2,p.y-h,w,h);
+      ctx.fillStyle='rgba(255,255,255,.18)';
+      for(let i=0;i<3;i++) ctx.fillRect(x-w/2+4*k, p.y-h+6*k+i*16*k, w-8*k, 3*k);
+    } else if(o.otype==='train'){
+      const w=50*k,h=76*k;
+      ctx.fillStyle='#1f2937';
+      ctx.fillRect(x-w/2,p.y-h,w,h);
+      ctx.fillStyle='#fbbf24';
+      ctx.fillRect(x-w/2+5*k,p.y-h+8*k,w-10*k,14*k);
+      ctx.fillStyle='rgba(255,255,255,.14)';
+      for(let i=0;i<4;i++) ctx.fillRect(x-w/2+6*k, p.y-h+30*k+i*12*k, w-12*k, 6*k);
+    }
+  } else if(o.kind==='coin'){
+    const c = o.ctype==='big'?'#ffed4a':(o.ctype==='magnet'?'#a78bfa':'#ffd23f');
+    if(o.ctype==='magnet'){
+      ctx.fillStyle=c; ctx.beginPath(); ctx.arc(x,p.y-20*k,10*k,0,7); ctx.stroke();
+      ctx.lineWidth=4*k; ctx.strokeStyle=c; ctx.stroke();
+    } else {
+      ctx.fillStyle=c; ctx.beginPath();
+      ctx.ellipse(x,p.y-18*k,7*k,9*k,0,0,7); ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.55)';
+      ctx.beginPath(); ctx.ellipse(x-2*k,p.y-20*k,2.4*k,3.4*k,0,0,7); ctx.fill();
+    }
+  } else if(o.kind==='letter'){
+    ctx.fillStyle='#6ee7ff'; ctx.beginPath();
+    ctx.arc(x,p.y-22*k,11*k,0,7); ctx.fill();
+    ctx.fillStyle='#0b0d12'; ctx.font=`bold ${13*k}px sans-serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(o.ch||'H',x,p.y-22*k);
+  } else if(o.kind==='box'){
+    const w=34*k,h=34*k;
+    // 底部光柱，提示可收集
+    const gl=ctx.createLinearGradient(x,p.y-h,p.y);
+    gl.addColorStop(0,'rgba(251,191,36,.5)'); gl.addColorStop(1,'rgba(251,191,36,0)');
+    ctx.fillStyle=gl; ctx.fillRect(x-8*k,p.y-h,16*k,h);
+    ctx.fillStyle='#fbbf24'; ctx.fillRect(x-w/2,p.y-h,w,h);
+    ctx.fillStyle='#7c5a00'; ctx.fillRect(x-w/2,p.y-h,w,4*k);
+    ctx.fillStyle='#fff3c4'; ctx.font=`bold ${16*k}px sans-serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('?',x,p.y-h/2);
+  }
+  ctx.restore();
+}
+
+function drawPlayer(){
+  const t=G.trk;
+  const airborne = G.jumpT>=0;
+  const sliding = G.slideT>=0;
+  const p=proj(0);
+  let x=laneX(G.lane,1);
+  let y=p.y;
+  let h=54, w=26;
+  if(airborne){
+    const k=Math.min(1,G.jumpT/0.31); const kk=G.jumpT<0.31?k:(1-(G.jumpT-0.31)/0.31);
+    y -= 62*Math.max(0,kk);
+    ctx.fillStyle='rgba(255,255,255,.12)';
+    ctx.beginPath(); ctx.ellipse(x,p.y,20,6,0,0,7); ctx.fill();
+  }
+  if(sliding){ h=26; y-=8; }
+  const cy=y-h/2;
+  const main = t.key==='L1'?'#7dd3fc':(t.key==='L2'?'#c4b5fd':'#fb923c');
+  const accent = t.key==='L1'?'#0ea5e9':(t.key==='L2'?'#8b5cf6':'#ef4444');
+  // 身体
+  ctx.fillStyle=accent;
+  ctx.beginPath();
+  if(sliding) ctx.ellipse(x,y-6,24,13,0,0,7);
+  else ctx.roundRect(x-11,cy+16,22,h-16,8);
+  ctx.fill();
+  // 头
+  ctx.fillStyle=main;
+  ctx.beginPath(); ctx.arc(x,cy+10,11,0,7); ctx.fill();
+  // 护盾
+  if(G.shield>0){
+    ctx.strokeStyle='rgba(110,231,255,.85)'; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.arc(x,cy+h*0.42,30,0,7); ctx.stroke();
+    for(let i=0;i<G.shield;i++){ ctx.fillStyle='#6ee7ff'; ctx.beginPath(); ctx.arc(x-12+i*12,cy+h*0.42+32,3.2,0,7); ctx.fill(); }
+  }
+  // 无敌闪烁
+  if(G.t<G.invulnUntil){ ctx.globalAlpha=0.45; }
+  ctx.restore();
+  ctx.save();
+}
+
+/* ---------- HUD ---------- */
+function drawHUD(){
+  const t=G.trk;
+  const hud=document.getElementById('hud');
+  // 顶部：倒计时环 + 速度 + 分数
+  const cx=W/2, cy=44, r=26;
+  ctx.save();
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,7);
+  ctx.fillStyle='rgba(8,11,18,.55)'; ctx.fill();
+  ctx.lineWidth=4; ctx.strokeStyle='rgba(255,255,255,.12)'; ctx.stroke();
+  const frac=Math.max(0,1-G.t/T);
+  const col = frac>0.5?'#4ade80':(frac>0.2?'#fbbf24':'#fb7185');
+  ctx.beginPath(); ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+frac*Math.PI*2);
+  ctx.strokeStyle=col; ctx.lineWidth=4; ctx.lineCap='round'; ctx.stroke();
+  ctx.fillStyle='#e8ecf4'; ctx.font='bold 17px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(Math.max(0,Math.ceil(T-G.t)),cx,cy+1);
+  ctx.font='9px sans-serif'; ctx.fillStyle='#8b96ab';
+  ctx.fillText('剩余秒',cx,cy+15);
+  // 左右信息
+  ctx.textAlign='left';
+  ctx.fillStyle='#8b96ab'; ctx.font='10px sans-serif';
+  ctx.fillText('速度',14,20);
+  ctx.fillStyle='#e8ecf4'; ctx.font='bold 17px sans-serif';
+  ctx.fillText((G.v*3.6).toFixed(0),14,38);
+  ctx.fillStyle='#8b96ab'; ctx.font='9px sans-serif';
+  ctx.fillText('km/h',14,51);
+  ctx.fillStyle='#8b96ab'; ctx.font='10px sans-serif';
+  ctx.fillText('分数',14,72);
+  ctx.fillStyle='#e8ecf4'; ctx.font='bold 15px sans-serif';
+  ctx.fillText(Math.round(G.score),14,89);
+  ctx.textAlign='right';
+  ctx.fillStyle='#8b96ab'; ctx.font='10px sans-serif';
+  ctx.fillText('连击',W-14,72);
+  ctx.fillStyle= G.combo>0?'#fbbf24':'#4a5568'; ctx.font='bold 17px sans-serif';
+  ctx.fillText('×'+G.combo,W-14,89);
+  if(t.needEvents){
+    ctx.fillStyle='#8b96ab'; ctx.font='10px sans-serif';
+    ctx.fillText('任务',W-14,20);
+    ctx.fillStyle= G.eventsDone>=t.needEvents?'#4ade80':'#e8ecf4';
+    ctx.font='bold 17px sans-serif';
+    ctx.fillText(`${G.eventsDone}/${t.needEvents}`,W-14,38);
+  }
+  if(G.shieldMax){
+    ctx.fillStyle='#6ee7ff'; ctx.font='10px sans-serif';
+    ctx.fillText('护盾 '+G.shield,W-14,51);
+  }
+  // 底部提示
+  if(G.msg && G.t-G.msgT<2){
+    ctx.textAlign='center'; ctx.fillStyle='#fbbf24'; ctx.font='bold 16px sans-serif';
+    ctx.fillText(G.msg,W/2,H*0.30);
+  }
+  if(paused){
+    ctx.fillStyle='rgba(5,8,14,.6)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#e8ecf4'; ctx.font='bold 22px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('已暂停',W/2,H/2);
+  }
+  ctx.restore();
+}
+
+/* ---------- 音效 ---------- */
+let AC=null;
+function beep(freq,dur){
+  try{
+    if(!AC) AC=new (window.AudioContext||window.webkitAudioContext)();
+    const o=AC.createOscillator(), g=AC.createGain();
+    o.type='triangle'; o.frequency.value=freq;
+    g.gain.setValueAtTime(0.06,AC.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+dur);
+    o.connect(g); g.connect(AC.destination);
+    o.start(); o.stop(AC.currentTime+dur);
+  }catch(e){}
+}
+
+/* ============================================================
+   启动
+   ============================================================ */
+initCanvas();
+bindInput();
+renderMenu();
+document.getElementById('bAgain').onclick = restart;
+document.getElementById('bMenu').onclick = ()=>{
+  document.getElementById('res').classList.add('hidden');
+  document.getElementById('hint').style.display='block';
+  document.getElementById('menu').classList.remove('hidden');
+  renderMenu(); G=null;
+};
+document.getElementById('bRevive').onclick = ()=>{
+  G.usedRevive=true;
+  G.alive=true; G.failed=null; G.t=0; G.dist=0; G.v=G.trk.v0;
+  G.objects=[]; G.spawnAt=0; G.evIdx=0; G.evActive=null;
+  G.combo=0; G.maxCombo=0; G.shield=1; G.eventsDone=0; G.eventsPerfect=0;
+  G.evIdx=0; G.lastInput=-99; G.dirUsed.clear();
+  G.laneChanges=0;G.jumps=0;G.slides=0;G.dodges=0;G.airTime=0;G.groundTime=0;
+  document.getElementById('res').classList.add('hidden');
+  document.getElementById('hint').style.display='block';
+};
+</script>
+</body>
+</html>

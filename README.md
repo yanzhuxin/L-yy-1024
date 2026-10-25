@@ -42,6 +42,8 @@ L-yy-1024/
 │   ├── TaskBox.spx           # 随机事件任务提示
 │   ├── builder-meta.json     # 项目元信息（名称 / 描述 / 操作说明）
 │   └── assets/               # 素材：背景 svg、各精灵 svg/png、index.json 索引
+├── LICENSE                   # MIT 许可证
+├── docs/                     # 设计文档与调研资料
 └── README.md
 ```
 
@@ -64,3 +66,17 @@ L-yy-1024/
 - 想调难度：改 `main.spx` 里的时间/速度曲线与 `Ox.spx` 的生成间隔。
 - 想加障碍类型：在 `Ox.spx` 的 `pickCostume` 与碰撞判定里新增分支，并补对应素材到 `assets/sprites/Ox/`。
 - 想换美术风格：替换 `assets/backdrops/` 与 `assets/sprites/` 下的 svg/png 即可，索引见各 `index.json`。
+
+## 设计文档
+
+项目开发过程中的设计稿、改编方案与市场调研，已整理在 [`docs/`](docs/)：
+
+- [`牛奔100秒_使用说明.md`](docs/牛奔100秒_使用说明.md) — 游戏使用说明（操作、玩法、计分）
+- [`牛奔100秒_XBuilder改编方案.md`](docs/牛奔100秒_XBuilder改编方案.md) — 从原版改编为 spx 工程的方案记录
+- [`坚持100秒_游戏设计文档.html`](docs/坚持100秒_游戏设计文档.html) — 游戏设计文档
+- [`坦克大战_跑酷_市场现状与复刻可行性调研.html`](docs/坦克大战_跑酷_市场现状与复刻可行性调研.html) — 同类跑酷游戏市场与复刻可行性调研
+- [`坚持100秒_可玩原型.html`](docs/坚持100秒_可玩原型.html) — 可玩原型（HTML 版）
+
+## 许可证
+
+本项目基于 [MIT 许可证](LICENSE) 开源。
