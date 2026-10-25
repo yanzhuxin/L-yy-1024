@@ -1,0 +1,322 @@
+// Hero —— 玩家牛精灵（纵深跑酷）
+//
+// 独立成精灵并放在 zorder 最后，保证永远绘制在障碍之上
+// （同一精灵内先创建的克隆体会被后创建的挡住）。
+//
+// 造型：heroA / heroB —— 来自参考视频的「背向镜头奔跑」两帧，
+//   已预旋转 90° 顺时针以抵消引擎对造型的旋转，因此游戏里看到的是原朝向。
+//
+// 操作方案（三种牛 ↔ 三种动作，一一对应）：
+//   ↑ / W / 空格  跳跃  → 越过低矮牛（jump 腾空姿态）
+//   ↓ / S         滑铲  → 钻过高架牛（slide 低头冲刺姿态）
+//   ← / A         左移一道
+//   → / D         右移一道（禁行牛 stop 只能换道躲）
+//
+// 注意：按键是广播，模板本体与克隆体都会收到，
+//   用 isTpl 区分——只有克隆体（真正的玩家）响应。
+//
+// 官方代码组织规范：var（唯一一个块）→ func → 事件处理器
+
+var (
+	bobAcc   float64 // 奔跑帧切换节拍
+	runFrame int     // 奔跑帧：0 / 1
+	isTpl    bool    // true = 模板本体（不响应指令）
+)
+
+// ===== 纵深投影：玩家固定在 z = 0 =====
+
+// laneXOf 车道号 → 屏幕 X（scale = 1）
+func laneXOf(l int) float64 {
+	if l == 0 {
+		return -115.0
+	} else if l == 2 {
+		return 115.0
+	}
+	return 0.0
+}
+
+// heroReset 玩家复位
+func heroReset() {
+	laneNow = 1
+	jumping = false
+	sliding = false
+	jumpLock = false
+	invincible = false
+	runFrame = 0
+	bobAcc = 0
+	setCostume "heroA"
+	setSize 0.6
+	setXYpos 0, -55
+	show
+}
+
+// heroChangeLane 左右换道（只改 X，Y 交给跳跃/滑铲管理）
+func heroChangeLane(dir int) {
+	if noInput {
+		brokeIdle = true
+		failReason = "任务失败：你不该按任何键"
+		broadcast "fail"
+		return
+	}
+	target := laneNow + dir
+	if target < 0 || target > 2 {
+		return
+	}
+	laneNow = target
+	moveDir = "lane"
+	if taskType == "lane" {
+		taskProgress = taskProgress + 1
+	}
+	if laneLock >= 0 && laneNow != laneLock {
+		failReason = "任务失败：你离开了指定车道"
+		broadcast "fail"
+		return
+	}
+	// 平滑横移：5 步 × 23px = 115px
+	dx := 23.0
+	if dir < 0 {
+		dx = -23.0
+	}
+	i := 0
+	for {
+		wait 0.02
+		changeXpos dx
+		i = i + 1
+		if i >= 5 {
+			break
+		}
+	}
+	setXpos laneXOf(laneNow)
+}
+
+// heroJump 跳跃（腾空越过低矮牛）
+func heroJump() {
+	if noInput {
+		brokeIdle = true
+		failReason = "任务失败：你不该按任何键"
+		broadcast "fail"
+		return
+	}
+	if jumping || sliding {
+		return
+	}
+	jumping = true
+	if taskType == "jump" {
+		taskProgress = taskProgress + 1
+	}
+	i := 0
+	for {
+		wait 0.04
+		changeYpos 13
+		i = i + 1
+		if i >= 5 {
+			break
+		}
+	}
+	i = 0
+	for {
+		wait 0.04
+		changeYpos -13
+		i = i + 1
+		if i >= 5 {
+			break
+		}
+	}
+	setYpos -55.0
+	jumping = false
+}
+
+// heroSlide 滑铲（下压钻过高架牛）
+func heroSlide() {
+	if noInput {
+		brokeIdle = true
+		failReason = "任务失败：你不该按任何键"
+		broadcast "fail"
+		return
+	}
+	if sliding || jumping {
+		return
+	}
+	sliding = true
+	if taskType == "slide" {
+		taskProgress = taskProgress + 1
+	}
+	changeYpos 24
+	wait 0.5
+	setYpos -55.0
+	sliding = false
+}
+
+// heroShieldFlash 护盾抵挡后的无敌闪烁
+// 注意：必须用定长节奏并在结尾无条件关闭 invincible ——
+// 旧写法「循环等 invincible 变 false」永远等不到（唯一置 false 的代码在循环后），
+// 会导致护盾挡一次撞击后玩家永久无敌。
+func heroShieldFlash() {
+	changeGraphicEffect GhostEffect, 50
+	wait 0.15
+	clearGraphicEffects
+	wait 0.15
+	changeGraphicEffect GhostEffect, 50
+	wait 0.15
+	clearGraphicEffects
+	wait 0.25
+	invincible = false
+	clearGraphicEffects
+}
+
+// ===== 事件处理器 =====
+
+onStart => {
+	// 模板本体隐藏，玩家是 Stage 克隆出来的那一个
+	isTpl = true
+	hide
+}
+
+onCloned data => {
+	isTpl = false
+	heroReset
+	for {
+		wait 0.05
+		// 游戏结束：冻结；收到重开清场信号则销毁
+		if finished {
+			if wiping {
+				destroy
+			}
+			continue
+		}
+		// 奔跑两帧循环
+		bobAcc = bobAcc + 0.05
+		if bobAcc >= 0.15 {
+			bobAcc = 0
+			if runFrame == 0 {
+				setCostume "heroA"
+				runFrame = 1
+			} else {
+				setCostume "heroB"
+				runFrame = 0
+			}
+		}
+		// 跟随车道（Y 由跳跃/滑铲管理，这里只改 X）
+		setXpos laneXOf(laneNow)
+	}
+}
+
+// ===== 按键 → 广播指令 =====
+onKey KeyUp, => {
+	broadcast "cmdJump"
+}
+
+onKey KeyW, => {
+	broadcast "cmdJump"
+}
+
+onKey KeySpace, => {
+	broadcast "cmdJump"
+}
+
+onKey KeyDown, => {
+	broadcast "cmdSlide"
+}
+
+onKey KeyS, => {
+	broadcast "cmdSlide"
+}
+
+onKey KeyLeft, => {
+	broadcast "cmdLeft"
+}
+
+onKey KeyA, => {
+	broadcast "cmdLeft"
+}
+
+onKey KeyRight, => {
+	broadcast "cmdRight"
+}
+
+onKey KeyD, => {
+	broadcast "cmdRight"
+}
+
+// ===== 指令（只有玩家克隆体响应）=====
+onMsg "cmdJump", => {
+	if isTpl {
+		return
+	}
+	heroJump
+}
+
+onMsg "cmdSlide", => {
+	if isTpl {
+		return
+	}
+	heroSlide
+}
+
+onMsg "cmdLeft", => {
+	if isTpl {
+		return
+	}
+	heroChangeLane -1
+}
+
+onMsg "cmdRight", => {
+	if isTpl {
+		return
+	}
+	heroChangeLane 1
+}
+
+// 吃到金币
+onMsg "coinGot", => {
+	if isTpl {
+		return
+	}
+	coinCount = coinCount + 1
+	combo = combo + 1
+	comboTimer = 0
+	score = score + 10 * scoreMul
+	if taskType == "coins10" || taskType == "coins15" {
+		taskProgress = taskProgress + 1
+	}
+	if taskType == "nogold" {
+		ateCoin = true
+		failReason = "任务失败：你还是吃了金币"
+		broadcast "fail"
+	}
+}
+
+// 玩家死亡：缩小退场（比瞬间消失更有打击感）
+onMsg "playerDead", => {
+	if isTpl {
+		return
+	}
+	jumping = false
+	sliding = false
+	clearGraphicEffects
+	setSize 0.68
+	wait 0.06
+	setSize 0.52
+	wait 0.06
+	setSize 0.36
+	wait 0.06
+	setSize 0.2
+	wait 0.06
+	hide
+}
+
+// 重开清场：销毁玩家克隆体（Stage 会重新生成）
+onMsg "wipe", => {
+	if isTpl {
+		return
+	}
+	destroy
+}
+
+// 护盾抵挡
+onMsg "shieldHit", => {
+	if isTpl {
+		return
+	}
+	heroShieldFlash
+}

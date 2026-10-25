@@ -1,0 +1,104 @@
+// 《牛奔100秒》主控脚本（Game 类）
+//
+// 视角：纵深跑酷（伪 3D）
+//   - 物体沿 z 轴从远处（z=700）向玩家（z=0）逼近
+//   - 屏幕位置与大小由透视投影算出：越远越小、越靠近地平线
+//   - 玩家固定在近端，只能左右换道 / 跳跃 / 滑铲
+//
+// 关键约定：
+//   1) 精灵实例无需声明 —— 引擎按精灵名自动生成实例
+//   2) 自定义 func 不是精灵方法，跨精灵调用一律报错
+//      → 跨精灵通信只用 broadcast / onMsg + 全局变量传参
+//   3) 全局变量集中在唯一的顶层 var 块内（一个 classfile 只允许一个 var 块）
+//   4) 代码顺序：var 块 → 事件处理器
+
+var (
+	// ===== 赛道 / 局内状态 =====
+	trackId   int // 当前赛道：1 晨曦 / 2 霓虹 / 3 熔岩
+	needTasks int // 通关所需完成任务数
+	score     int
+	coinCount int
+	combo     int
+	taskDone  int
+	shieldLeft int
+
+	// ===== 玩家状态（Cow 判定时要读，故放全局）=====
+	laneNow  int  // 玩家当前车道：0 左 1 中 2 右
+	jumping  bool // 腾空中（可越过低矮牛）
+	sliding  bool // 滑铲中（可钻过高架牛）
+	jumpLock bool // 跳跃/滑铲互斥锁
+
+	// ===== 任务 =====
+	taskSlotIdx  int
+	taskTarget   int
+	taskProgress int
+	taskScore    int
+	laneLock     int // 「定点守株」任务锁定的车道，-1 表示未锁定
+	taskPerfect  int
+
+	// ===== HUD =====
+	remain int // 剩余秒
+
+	// ===== 浮点：速度与生成 =====
+	accel      float64 // 加速度
+	baseStep   float64 // 起步时每帧 z 推进量
+	elapsed    float64
+	comboTimer float64
+	stepLen    float64 // 当前每帧 z 推进量（随时间增长 → 持续加速）
+	spawnAcc   float64 // 障碍生成累计距离
+	coinAcc    float64 // 金币生成累计距离
+	taskDur    float64
+	taskLeft   float64
+	slotNext   float64 // 下一个任务箱的投放时刻（秒）
+
+	// ===== 浮点：随机事件 =====
+	evtNext  float64 // 下一个随机事件的触发时刻（秒）
+	evtLeft  float64 // 持续型事件剩余时间
+	evtTick  float64 // 爆发型事件的投放节拍
+	speedMul float64 // 速度倍率（极速冲刺 / 缓速慢镜）
+	scoreMul int     // 积分倍率（双倍积分）
+	tickAcc  float64 // 帧广播节拍（驱动玩家奔跑动画）
+
+	// ===== 字符串 =====
+	trackName string
+	taskType  string
+	taskName  string
+	taskDesc  string
+	moveDir   string
+	taskInfo  string // HUD：当前任务摘要
+	evtType   string // 当前随机事件类型
+	evtName   string // HUD：当前随机事件名
+
+	// ===== 整数：随机事件 =====
+	evtBurst      int // 爆发型事件还需投放的数量
+	forceKindLeft int // 强制牛种剩余数量（金牛送礼 / 三连封锁）
+	forceKind     string
+
+	// ===== 布尔 =====
+	heroSpawned  bool // 玩家是否已生成
+	wantHero     int  // >0 表示「下一个 Hero 克隆体」是玩家
+	alive        bool
+	invincible   bool // 护盾/受击后的无敌状态（Player 与 Cow 共用）
+	finished     bool
+	won          bool // 本局是否通关（决定结算与重试提示文案）
+	wiping       bool // 重开清场中：通知所有冻结的克隆体自行销毁
+	taskActive   bool
+	noInput      bool
+	brokenShield bool
+	ateCoin      bool
+	brokeIdle    bool // 「开摆」任务期间按了键
+
+	// ===== 跨精灵传参（广播只能传全局）=====
+	setupTrackId int    // 待初始化的赛道 id，由 onStart 设置后广播给 Stage
+	failReason   string // 失败原因，由 Player 设置后广播给 Stage 结算
+)
+
+// ===== 事件处理器 =====
+
+onStart => {
+	// 默认从「霓虹」赛道起跑（有任务箱、节奏适中）
+	setupTrackId = 2
+	broadcast "playerReset"
+	broadcast "setupTrack"
+	broadcast "resetRun"
+}

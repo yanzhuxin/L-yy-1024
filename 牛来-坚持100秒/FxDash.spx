@@ -1,0 +1,108 @@
+// FxDash —— 路面滚动虚线与路缘光柱
+//
+// 用与 Ox/Coin 相同的透视投影，在世界坐标系里按固定间距生成
+// 车道分隔虚线与路缘光柱，随世界一起向玩家推进 ——
+// 与静态背景线叠加后产生强烈的速度感（同类跑酷的核心纵深手法）。
+//
+// side 约定：±1 = 车道分隔虚线（X0=±57.5），±2 = 路缘光柱（X0=±172.5）
+// 生成节拍按「推进距离」计（与速度无关，虚线在世界中恒定间距）。
+//
+// 官方代码组织规范：var（唯一一个块）→ func → 事件处理器
+
+var (
+	acc  float64 // 虚线距离累计
+	acc2 float64 // 光柱距离累计
+	side int     // 本次克隆的横向位置标记
+)
+
+// projScale z → 缩放系数
+func projScale(zz float64) float64 {
+	return 300.0 / (300.0 + zz)
+}
+
+// placeBy 依据 side 与 z 放置克隆体（含远景雾化）
+func placeBy(zz float64) {
+	s := projScale(zz)
+	off := 57.5
+	if side == 2 || side == -2 {
+		off = 172.5
+	}
+	if side < 0 {
+		off = -off
+	}
+	py := 30.0 - 80.0 * s
+	if side == 2 || side == -2 {
+		// 光柱底端落在地面：抬高半个身高
+		py = py + 46.0 * s
+	}
+	setXYpos off * s, py
+	setSize 0.8 * s
+	// 越远越淡，隐入地平线雾里
+	fog := (1.0 - s) * 62.0
+	if fog > 55.0 {
+		fog = 55.0
+	}
+	if fog < 0.0 {
+		fog = 0.0
+	}
+	setGraphicEffect GhostEffect, fog
+}
+
+onStart => {
+	hide
+	acc = 0
+	acc2 = 0
+	for {
+		wait 0.05
+		if finished || !alive {
+			continue
+		}
+		acc = acc + stepLen
+		acc2 = acc2 + stepLen
+		if acc >= 62.0 {
+			acc = 0
+			// 两条车道分隔线（错开克隆，避免 side 并发覆盖）
+			side = 1
+			FxDash.clone
+			wait 0.02
+			side = -1
+			FxDash.clone
+			wait 0.02
+		}
+		if acc2 >= 170.0 {
+			acc2 = 0
+			side = 2
+			FxDash.clone
+			wait 0.02
+			side = -2
+			FxDash.clone
+			wait 0.02
+		}
+	}
+}
+
+onCloned data => {
+	if side == 2 || side == -2 {
+		setCostume "post"
+	} else {
+		setCostume "dash"
+	}
+	myZ := 700.0
+	placeBy myZ
+	show
+	for {
+		wait 0.05
+		// 游戏结束冻结；重开清场时自行销毁
+		if finished {
+			if wiping {
+				destroy
+			}
+			continue
+		}
+		myZ = myZ - stepLen
+		placeBy myZ
+		if myZ < -80.0 {
+			destroy
+		}
+	}
+}

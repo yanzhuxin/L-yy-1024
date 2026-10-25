@@ -218,3 +218,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ===== 牛来-坚持100秒（spx 游戏工程） =====
+# 素材/造型的本地备份
+*.bak
+# macOS 元数据
+.DS_Store
+# 打包文件的中间备份
+*.xbp.bak

@@ -1,0 +1,76 @@
+// FxSpark —— 拾取火花
+//
+// 金币入账 / 接到任务箱 / 护盾碎裂时，在玩家位置炸开小星火。
+// 每颗火花自带随机速度与寿命，向上飘散后消失。
+//
+// 官方代码组织规范：var（唯一一个块）→ func → 事件处理器
+
+var (
+	vx   float64 // 每帧横移
+	vy   float64 // 每帧纵移（向上为正）
+	life int     // 存活帧数
+)
+
+// laneXOf 车道号 → 屏幕 X
+func laneXOf(l int) float64 {
+	if l == 0 {
+		return -115.0
+	} else if l == 2 {
+		return 115.0
+	}
+	return 0.0
+}
+
+// burst 炸开 n 颗火花（错开克隆，给每个克隆体读参的间隙）
+func burst(n int) {
+	i := 0
+	for {
+		if i >= n {
+			break
+		}
+		FxSpark.clone
+		i = i + 1
+		wait 0.02
+	}
+}
+
+onStart => {
+	hide
+}
+
+onMsg "coinGot", => {
+	burst 3
+}
+
+onMsg "startTask", => {
+	burst 5
+}
+
+onMsg "shieldHit", => {
+	burst 6
+}
+
+onCloned data => {
+	setCostume "spark"
+	setXYpos laneXOf(laneNow) + float64(rand(0, 36)) - 18.0, -100.0 + float64(rand(0, 45))
+	vx = float64(rand(0, 14)) - 7.0
+	vy = float64(rand(0, 7)) + 2.0
+	life = 0
+	show
+	for {
+		wait 0.045
+		changeXpos vx
+		changeYpos vy - 1.0
+		life = life + 1
+		if life < 4 {
+			setGraphicEffect GhostEffect, 15
+		} else if life < 7 {
+			setGraphicEffect GhostEffect, 45
+		} else {
+			setGraphicEffect GhostEffect, 75
+		}
+		if life >= 10 {
+			destroy
+		}
+	}
+}

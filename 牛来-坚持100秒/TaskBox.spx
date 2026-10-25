@@ -1,0 +1,79 @@
+// TaskBox —— 任务箱精灵
+// 纵深推进：克隆体持有 z（700 → 0 → -90），按透视投影刷新位置与大小
+// 设计：任务箱落在玩家当时所在车道 —— 顺路就接到（默认接任务），
+//      主动变道避开 = 放弃本次任务。接与不接都是玩家可控的取舍。
+//
+// 官方代码组织规范：var（唯一一个块）→ func → 事件处理器
+
+var (
+	myLane int
+	z      float64
+	got    bool
+)
+
+// ===== 纵深投影 =====
+
+func projScale(zz float64) float64 {
+	return 300.0 / (300.0 + zz)
+}
+
+func projY(zz float64) float64 {
+	return 30.0 - 107.0 * projScale(zz)
+}
+
+func projX(l int, zz float64) float64 {
+	lx := 0.0
+	if l == 0 {
+		lx = -115.0
+	} else if l == 2 {
+		lx = 115.0
+	}
+	return lx * projScale(zz)
+}
+
+func place() {
+	sx := projX(myLane, z)
+	sy := projY(z)
+	sc := 0.8 * projScale(z)
+	setXYpos sx, sy
+	setSize sc
+}
+
+// ===== 事件处理器 =====
+
+onStart => {
+	// 模板本体隐藏，只有克隆体参与游戏
+	hide
+}
+
+onCloned data => {
+	setCostume "taskbox"
+	// 落在玩家当前车道，保证「顺路可接」
+	myLane = laneNow
+	z = 700.0
+	got = false
+	place
+	show
+	for {
+		wait 0.05
+		// 冻结等待；重开清场时销毁
+		if finished {
+			if wiping {
+				destroy
+			}
+			continue
+		}
+		z = z - stepLen
+		place
+		if !got && z <= 0 {
+			got = true
+			if myLane == laneNow {
+				broadcast "startTask"
+				destroy
+			}
+		}
+		if z < -90 {
+			destroy
+		}
+	}
+}

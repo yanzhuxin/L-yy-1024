@@ -1,0 +1,1 @@
+{"heading": 0, "x": 280, "y": 0, "size": 0.7, "rotationStyle": "normal", "physicsMode": "no", "costumeIndex": 0, "visible": false, "isDraggable": false, "collisionPivot": {"x": 0, "y": 0}, "collisionShapeType": "none", "collisionShapeParams": [], "costumes": [{"x": 60, "y": 60, "faceRight": 0, "bitmapResolution": 1, "name": "coin", "path": "coin.svg"}]}

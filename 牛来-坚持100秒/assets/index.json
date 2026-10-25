@@ -1,0 +1,1 @@
+{"backdrops": [{"name": "dawn", "path": "dawn.svg", "bitmapResolution": 1}, {"name": "neon", "path": "neon.svg", "bitmapResolution": 1}, {"name": "lava", "path": "lava.svg", "bitmapResolution": 1}], "backdropIndex": 1, "zorder": ["Stage", "Shadow", "FxDash", "Coin", "TaskBox", "Ox", "Hero", "FxSpark", "FxTop", "Hud"]}

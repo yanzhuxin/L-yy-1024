@@ -1,0 +1,88 @@
+// Coin —— 金币精灵
+// 纵深推进：克隆体持有 z（700 → 0 → -90），按透视投影刷新位置与大小
+// 判定：z 穿过玩家平面时，若车道相同即被吃掉
+//
+// 官方代码组织规范：var（唯一一个块）→ func → 事件处理器
+
+var (
+	myLane int
+	z      float64
+	got    bool
+)
+
+// ===== 纵深投影 =====
+
+func projScale(zz float64) float64 {
+	return 300.0 / (300.0 + zz)
+}
+
+func projY(zz float64) float64 {
+	return 30.0 - 113.0 * projScale(zz)
+}
+
+func projX(l int, zz float64) float64 {
+	lx := 0.0
+	if l == 0 {
+		lx = -115.0
+	} else if l == 2 {
+		lx = 115.0
+	}
+	return lx * projScale(zz)
+}
+
+func place() {
+	sx := projX(myLane, z)
+	sy := projY(z)
+	sc := 0.7 * projScale(z)
+	setXYpos sx, sy
+	setSize sc
+}
+
+// pickLane 三车道随机
+func pickLane() int {
+	r := rand(0, 3)
+	if r < 1 {
+		return 0
+	} else if r < 2 {
+		return 1
+	}
+	return 2
+}
+
+// ===== 事件处理器 =====
+
+onStart => {
+	// 模板本体隐藏，只有克隆体参与游戏
+	hide
+}
+
+onCloned data => {
+	setCostume "coin"
+	myLane = pickLane()
+	z = 700.0
+	got = false
+	place
+	show
+	for {
+		wait 0.05
+		// 冻结等待；重开清场时销毁
+		if finished {
+			if wiping {
+				destroy
+			}
+			continue
+		}
+		z = z - stepLen
+		place
+		if !got && z <= 0 {
+			got = true
+			if myLane == laneNow {
+				broadcast "coinGot"
+				destroy
+			}
+		}
+		if z < -90 {
+			destroy
+		}
+	}
+}

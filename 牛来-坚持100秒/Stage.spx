@@ -1,0 +1,551 @@
+// Stage —— 游戏总监精灵
+// 职责：赛道初始化、100 秒计时、纵深障碍/金币/任务箱生成、
+//       随机事件调度、任务派发与判定、失败结算
+//
+// 纵深坐标约定（伪 3D）：
+//   z = 700  最远端（最小、最靠地平线）
+//   z = 0    玩家所在平面（原尺寸）
+//   z = -90  飞过玩家身后（销毁）
+//   投影：scale = 300 / (300 + z)
+//         屏幕 x = 车道x * scale，屏幕 y = 30 - 155 * scale
+//
+// 说明：
+//   - Stage 是唯一常驻逻辑精灵，其余精灵靠 clone 产生并自行推进
+//   - 自定义 func 不是精灵方法，跨精灵只能用 broadcast / onMsg
+//   - 代码顺序：var 块 → func → 事件处理器
+
+// ===== HUD 变量（监视器只能绑定「target 精灵自身声明」的变量）=====
+var (
+	hudTime int
+	hudScore int
+	hudCoin int
+	hudInfo string
+)
+
+// ===== 赛道配置 =====
+// setupTrack 依据 id 配置赛道参数并切换背景
+func setupTrack(id int) {
+	trackId = id
+	if id == 1 {
+		trackName = "晨曦"
+		accel = 0.16
+		baseStep = 11.0
+		needTasks = 1
+		slotNext = 26
+		setBackdrop "dawn"
+	} else {
+		if id == 2 {
+			trackName = "霓虹"
+			accel = 0.20
+			baseStep = 13.0
+			needTasks = 2
+			slotNext = 20
+			setBackdrop "neon"
+		} else {
+			trackName = "熔岩"
+			accel = 0.26
+			baseStep = 15.0
+			needTasks = 3
+			slotNext = 16
+			setBackdrop "lava"
+		}
+	}
+}
+
+// ===== 一局初始化 =====
+func resetRun() {
+	elapsed = 0
+	score = 0
+	coinCount = 0
+	combo = 0
+	comboTimer = 0
+	taskDone = 0
+	taskPerfect = 0
+	shieldLeft = 1
+	alive = true
+	finished = false
+	won = false
+	wiping = false
+	laneNow = 1
+	laneLock = -1
+	jumping = false
+	sliding = false
+	jumpLock = false
+	invincible = false
+	stepLen = baseStep
+	spawnAcc = 0
+	coinAcc = 0
+	taskSlotIdx = 0
+	taskActive = false
+	noInput = false
+	brokenShield = false
+	ateCoin = false
+	brokeIdle = false
+	moveDir = ""
+	remain = 100
+	taskInfo = "无"
+	// 随机事件
+	evtNext = 8
+	evtLeft = 0
+	evtTick = 0
+	evtBurst = 0
+	evtType = ""
+	evtName = "无"
+	speedMul = 1.0
+	scoreMul = 1
+	forceKind = ""
+	forceKindLeft = 0
+	heroSpawned = false
+	// HUD
+	hudTime = 100
+	hudScore = 0
+	hudCoin = 0
+	hudInfo = "准备"
+
+}
+
+// ===== 障碍生成 =====
+// 只负责「何时生成」，种类与车道由克隆体在 onCloned 内自行抽取
+// （broadcast 无法定向投递给单个克隆体）
+func spawnObstacles() {
+	gap := 210.0 + elapsed * 0.9
+	if trackId == 3 {
+		gap = gap * 0.86
+	}
+	spawnAcc = spawnAcc + stepLen
+	if spawnAcc < gap {
+		return
+	}
+	spawnAcc = 0
+	// 任务期间障碍密度下调（任务与躲避争夺同一份注意力）
+	if taskActive {
+		if rand(0, 1) > 0.62 {
+			return
+		}
+	}
+	Ox.clone
+}
+
+// ===== 金币生成 =====
+func spawnCoins() {
+	coinAcc = coinAcc + stepLen
+	step := 130.0
+	if taskActive {
+		step = 70.0
+	}
+	if coinAcc < step {
+		return
+	}
+	coinAcc = 0
+	Coin.clone
+}
+
+// ===== 任务箱生成 =====
+func spawnTaskBox() {
+	if slotNext > 100 {
+		return
+	}
+	if elapsed < slotNext {
+		return
+	}
+	if trackId == 1 {
+		slotNext = slotNext + 26
+	} else if trackId == 2 {
+		slotNext = slotNext + 20
+	} else {
+		slotNext = slotNext + 16
+	}
+	TaskBox.clone
+}
+
+// ===== 随机事件：派发 =====
+func triggerEvent() {
+	r := rand(0, 100)
+	if r < 15 {
+		evtType = "coinrain"
+		evtName = "金币雨"
+		evtBurst = 14
+		say "随机事件 · 金币雨！", 1.6
+	} else if r < 30 {
+		evtType = "stampede"
+		evtName = "牛群冲锋"
+		evtBurst = 6
+		say "随机事件 · 牛群冲锋！", 1.6
+	} else if r < 43 {
+		evtType = "rush"
+		evtName = "极速冲刺"
+		evtLeft = 5
+		speedMul = 1.75
+		say "随机事件 · 极速冲刺！", 1.6
+	} else if r < 54 {
+		evtType = "slow"
+		evtName = "缓速慢镜"
+		evtLeft = 4.5
+		speedMul = 0.55
+		say "随机事件 · 缓速慢镜", 1.6
+	} else if r < 65 {
+		evtType = "shield"
+		evtName = "护盾补给"
+		shieldLeft = shieldLeft + 1
+		say "随机事件 · 护盾 +1", 1.6
+	} else if r < 77 {
+		evtType = "double"
+		evtName = "双倍积分"
+		evtLeft = 8
+		scoreMul = 2
+		say "随机事件 · 双倍积分！", 1.6
+	} else if r < 88 {
+		evtType = "gale"
+		evtName = "疾风冲刺"
+		evtLeft = 4.5
+		speedMul = 1.45
+		say "随机事件 · 疾风冲刺！", 1.6
+	} else {
+		evtType = "block"
+		evtName = "三连封锁"
+		evtBurst = 3
+		forceKind = "mid"
+		forceKindLeft = 3
+		say "随机事件 · 三连封锁！", 1.6
+	}
+}
+
+// ===== 随机事件：结束持续型 =====
+func endEvent() {
+	if evtType == "rush" || evtType == "slow" {
+		speedMul = 1.0
+	}
+	if evtType == "double" {
+		scoreMul = 1
+	}
+	evtLeft = 0
+	evtType = ""
+	evtName = "无"
+}
+
+// ===== 随机事件：爆发型投放 =====
+func pumpEvent() {
+	if evtBurst <= 0 {
+		return
+	}
+	evtTick = evtTick + 0.05
+	if evtTick < 0.14 {
+		return
+	}
+	evtTick = 0
+	evtBurst = evtBurst - 1
+	if evtType == "coinrain" {
+		Coin.clone
+	}
+	if evtType == "stampede" || evtType == "golden" || evtType == "block" {
+		Ox.clone
+	}
+	if evtBurst <= 0 {
+		forceKind = ""
+		forceKindLeft = 0
+		evtType = ""
+		evtName = "无"
+	}
+}
+
+// ===== 任务派发 =====
+func startTask() {
+	r := rand(0, 100)
+	if r < 18 {
+		taskType = "coins10"
+		taskName = "金币冲刺"
+		taskDesc = "10秒内收集 22 颗金币"
+		taskDur = 10
+		taskTarget = 22
+		taskScore = 400
+	} else if r < 32 {
+		taskType = "coins15"
+		taskName = "金币长跑"
+		taskDesc = "15秒内收集 32 颗金币"
+		taskDur = 15
+		taskTarget = 32
+		taskScore = 600
+	} else if r < 46 {
+		taskType = "jump"
+		taskName = "腾空连跳"
+		taskDesc = "10秒内完成 8 次跳跃"
+		taskDur = 10
+		taskTarget = 8
+		taskScore = 350
+	} else if r < 58 {
+		taskType = "slide"
+		taskName = "贴地滑铲"
+		taskDesc = "10秒内完成 6 次滑铲"
+		taskDur = 10
+		taskTarget = 6
+		taskScore = 350
+	} else if r < 68 {
+		taskType = "lane"
+		taskName = "连续变道"
+		taskDesc = "10秒内变道 10 次"
+		taskDur = 10
+		taskTarget = 10
+		taskScore = 400
+	} else if r < 78 {
+		taskType = "idle"
+		taskName = "开摆躺平"
+		taskDesc = "9秒内不要按任何操作键"
+		taskDur = 9
+		taskTarget = 9
+		taskScore = 500
+	} else if r < 86 {
+		taskType = "nogold"
+		taskName = "戒断金币"
+		taskDesc = "10秒内一颗金币都不许碰"
+		taskDur = 10
+		taskTarget = 0
+		taskScore = 450
+	} else if r < 93 {
+		taskType = "shield"
+		taskName = "护盾不破"
+		taskDesc = "10秒内护盾不被击碎"
+		taskDur = 10
+		taskTarget = 1
+		taskScore = 500
+	} else {
+		taskType = "dodge"
+		taskName = "闪避零失误"
+		taskDesc = "12秒内闪避 6 个障碍"
+		taskDur = 12
+		taskTarget = 6
+		taskScore = 500
+	}
+
+	taskActive = true
+	taskLeft = taskDur
+	taskProgress = 0
+	noInput = false
+	brokenShield = false
+	ateCoin = false
+	brokeIdle = false
+	moveDir = ""
+	laneLock = -1
+	if taskType == "shield" {
+		shieldLeft = 3
+	}
+	if taskType == "idle" {
+		noInput = true
+	}
+	say taskName + "：" + taskDesc, 2.2
+}
+
+// ===== 任务完成判定 =====
+func finishTask() {
+	if !taskActive {
+		return
+	}
+	taskActive = false
+	noInput = false
+	laneLock = -1
+
+	ok := true
+	if taskType == "coins10" || taskType == "coins15" {
+		ok = taskProgress >= taskTarget
+	} else if taskType == "jump" || taskType == "slide" || taskType == "lane" {
+		ok = taskProgress >= taskTarget
+	} else if taskType == "idle" {
+		ok = !brokeIdle
+	} else if taskType == "nogold" {
+		ok = !ateCoin
+	} else if taskType == "shield" {
+		ok = !brokenShield
+	} else if taskType == "dodge" {
+		ok = taskProgress >= taskTarget
+	}
+
+	if ok {
+		taskDone = taskDone + 1
+		score = score + taskScore
+		say "任务达成！", 1.4
+	} else {
+		failNow "任务失败：" + taskName
+	}
+}
+
+// ===== 失败与结算 =====
+func failNow(reason string) {
+	if finished {
+		return
+	}
+	alive = false
+	finished = true
+	won = false
+	broadcast "playerDead"
+	say reason, 2.5
+	wait 1.2
+	showResult false, reason
+}
+
+// checkWin 100 秒到点，校验任务完成数
+func checkWin() {
+	if needTasks > 0 && taskDone < needTasks {
+		showResult false, "任务没做完，再试一次"
+		return
+	}
+	showResult true, ""
+}
+
+// showResult 展示结算（常驻重试提示交给 Hud 精灵，避免两处气泡重复）
+func showResult(win bool, reason string) {
+	won = win
+	if win {
+		say "通关！坚持了 100 秒", 3
+	} else {
+		say reason, 3
+	}
+}
+
+// ===== 重开一局 =====
+// 流程：先让冻结的克隆体自行销毁 → 重置状态 → 复位玩家
+func restart() {
+	wiping = true
+	broadcast "wipe"
+	wait 0.35
+	wiping = false
+	resetRun
+	won = false
+	broadcast "playerReset"
+	say "重新开始！", 1.2
+}
+
+// ===== 跨精灵消息 =====
+// spx 不允许跨精灵调用自定义 func，统一走「全局变量传参 + 广播」
+
+// Game 初始化赛道（setupTrackId 由 main.spx 设置）
+onMsg "setupTrack", => {
+	setupTrack setupTrackId
+}
+
+// Game 重置一局
+onMsg "resetRun", => {
+	resetRun
+}
+
+// Player 请求失败结算（failReason 由 Player 设置）
+onMsg "fail", => {
+	failNow failReason
+}
+
+// TaskBox 被玩家接到 → 派发任务
+onMsg "startTask", => {
+	startTask
+}
+
+// Cow 判定为撞击（护盾耗尽或未躲开）→ 统一死亡结算
+onMsg "cowHit", => {
+	if finished {
+		return
+	}
+	if invincible {
+		return
+	}
+	if shieldLeft > 0 {
+		shieldLeft = shieldLeft - 1
+		brokenShield = true
+		invincible = true
+		broadcast "shieldHit"
+		return
+	}
+	alive = false
+	finished = true
+	broadcast "playerDead"
+	say "撞到牛了！", 2.5
+	wait 1.2
+	showResult false, "撞到牛了！游戏结束"
+}
+
+// R 键：结算画面下重开一局（游戏中按键无效，避免误触）
+onKey KeyR, => {
+	if !finished {
+		return
+	}
+	restart
+}
+
+// ===== 主循环 =====
+onStart => {
+	for {
+		wait 0.05
+		if finished || !alive {
+			continue
+		}
+		elapsed += 0.05
+
+		// HUD：剩余秒
+		remain = 100 - int(elapsed)
+		if remain < 0 {
+			remain = 0
+		}
+
+		// 生成玩家克隆体
+		if !heroSpawned && elapsed > 0.5 {
+			heroSpawned = true
+			wantHero = 1
+			Hero.clone
+		}
+
+		// 持续加速：步长随时间线性增长，再乘以事件倍率
+		stepLen = (baseStep + accel * elapsed * 0.55) * speedMul
+		if taskActive && trackId == 3 {
+			stepLen = stepLen * 1.08
+		}
+
+		// 连击衰减
+		if combo > 0 {
+			comboTimer = comboTimer + 0.05
+			if comboTimer > 2.5 {
+				combo = 0
+				comboTimer = 0
+			}
+		}
+
+		// 任务计时
+		if taskActive {
+			taskLeft = taskLeft - 0.05
+			if taskLeft <= 0 {
+				finishTask()
+			}
+		}
+
+		// 随机事件调度
+		if elapsed >= evtNext {
+			evtNext = elapsed + 12.0 + rand(0, 7)
+			triggerEvent
+		}
+		if evtLeft > 0 {
+			evtLeft = evtLeft - 0.05
+			if evtLeft <= 0 {
+				endEvent
+			}
+		}
+		pumpEvent()
+
+		spawnObstacles()
+		spawnCoins()
+		spawnTaskBox()
+
+		// HUD 同步（监视器读的是 Stage 自身变量）
+		hudTime = remain
+		hudScore = score
+		hudCoin = coinCount
+		if taskActive {
+			hudInfo = taskName
+		} else {
+			if evtName == "无" {
+				hudInfo = "奔跑中"
+			} else {
+				hudInfo = evtName
+			}
+		}
+
+		if elapsed >= 100 {
+			finished = true
+			checkWin()
+		}
+	}
+}

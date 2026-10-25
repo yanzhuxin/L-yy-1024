@@ -1,0 +1,1 @@
+{"heading": 0, "x": 0, "y": 0, "size": 1, "rotationStyle": "normal", "physicsMode": "no", "costumeIndex": 0, "visible": true, "isDraggable": false, "collisionPivot": {"x": 0, "y": 0}, "collisionShapeType": "none", "collisionShapeParams": [], "costumes": [{"x": 240, "y": 180, "faceRight": 0, "bitmapResolution": 1, "name": "stage", "path": "stage.svg"}]}

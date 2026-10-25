@@ -1,0 +1,143 @@
+// FxTop —— 全屏反馈特效（最上层，仅位于 HUD 之下）
+//
+// 1) 受击闪屏：护盾抵挡 → 白闪；失败 → 红闪
+// 2) 护盾脉冲环：无敌期间在玩家位置周期性扩散光环
+// 3) 速度线：极速状态（冲刺事件 / 后期高速）时从空中向外下扫过的流光
+//
+// 模板本体负责闪屏；环与速度线用克隆体（互不抢占造型）。
+// role 由主循环在克隆前设置 —— 主循环同一协程内顺序赋值，
+// 借助末尾 wait 的调度间隙保证克隆体读到正确值。
+//
+// 官方代码组织规范：var（唯一一个块）→ func → 事件处理器
+
+var (
+	flashLeft float64 // 闪屏剩余秒
+	flashRed  bool    // 是否红色闪屏
+	ringAcc   int     // 护盾环节拍
+	streakAcc int     // 速度线节拍
+	role      string  // 本次克隆角色：ring / streak
+)
+
+// laneXOf 车道号 → 屏幕 X
+func laneXOf(l int) float64 {
+	if l == 0 {
+		return -115.0
+	} else if l == 2 {
+		return 115.0
+	}
+	return 0.0
+}
+
+onStart => {
+	hide
+	flashLeft = 0
+	for {
+		wait 0.05
+		// ---- 闪屏 ----
+		if flashLeft > 0 {
+			flashLeft = flashLeft - 0.05
+			if flashRed {
+				setCostume "flashR"
+				setGraphicEffect GhostEffect, 62
+			} else {
+				setCostume "flashW"
+				setGraphicEffect GhostEffect, 45
+			}
+			show
+			if flashLeft <= 0 {
+				hide
+			}
+		}
+		if finished {
+			hide
+			continue
+		}
+		// ---- 护盾脉冲环 ----
+		if invincible {
+			ringAcc = ringAcc + 1
+			if ringAcc >= 3 {
+				ringAcc = 0
+				role = "ring"
+				FxTop.clone
+				wait 0.02
+			}
+		} else {
+			ringAcc = 0
+		}
+		// ---- 速度线 ----
+		if alive && stepLen > 23.0 {
+			streakAcc = streakAcc + 1
+			if streakAcc >= 2 {
+				streakAcc = 0
+				role = "streak"
+				FxTop.clone
+				wait 0.02
+			}
+		} else {
+			streakAcc = 0
+		}
+	}
+}
+
+// 护盾抵挡 → 白闪
+onMsg "shieldHit", => {
+	flashLeft = 0.3
+	flashRed = false
+}
+
+// 失败 → 红闪
+onMsg "playerDead", => {
+	flashLeft = 0.55
+	flashRed = true
+}
+
+onCloned data => {
+	if role == "ring" {
+		// 护盾环：五步扩散渐隐
+		setCostume "ring"
+		setXYpos laneXOf(laneNow), -55.0
+		setSize 0.5
+		setGraphicEffect GhostEffect, 20
+		show
+		wait 0.05
+		setSize 0.72
+		setGraphicEffect GhostEffect, 38
+		wait 0.05
+		setSize 0.95
+		setGraphicEffect GhostEffect, 55
+		wait 0.05
+		setSize 1.2
+		setGraphicEffect GhostEffect, 72
+		wait 0.05
+		setSize 1.45
+		setGraphicEffect GhostEffect, 88
+		wait 0.05
+		destroy
+	} else {
+		// 速度线：从空中向外下扫过
+		setCostume "streak"
+		sx0 := float64(rand(0, 440)) - 220.0
+		setXYpos sx0, 120.0
+		setSize 0.6
+		setGraphicEffect GhostEffect, 30
+		show
+		wait 0.05
+		setXYpos sx0 * 1.15, 60.0
+		setSize 0.75
+		setGraphicEffect GhostEffect, 45
+		wait 0.05
+		setXYpos sx0 * 1.3, 0.0
+		setSize 0.9
+		setGraphicEffect GhostEffect, 60
+		wait 0.05
+		setXYpos sx0 * 1.45, -60.0
+		setSize 1.05
+		setGraphicEffect GhostEffect, 75
+		wait 0.05
+		setXYpos sx0 * 1.6, -120.0
+		setSize 1.2
+		setGraphicEffect GhostEffect, 88
+		wait 0.05
+		destroy
+	}
+}

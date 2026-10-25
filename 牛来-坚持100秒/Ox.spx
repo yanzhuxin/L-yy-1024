@@ -1,0 +1,191 @@
+// Ox —— 牛系障碍精灵
+//
+// 纵深推进：克隆体持有一个 z（700 → 0 → -90），
+//   每帧 z -= stepLen，并按透视投影刷新屏幕位置与大小：
+//     scale = 300 / (300 + z)
+//     x = 车道x * scale      y = 30 - 80 * scale      size = 0.75 * scale
+//
+// 造型（全部预旋转 90° 顺时针，抵消引擎对造型的 90° 逆时针旋转）：
+//   stop   禁行牛（举禁行牌）→ 只能换道躲
+//   jump   躺卧牛（腾空姿态）→ 需跳跃越过
+//   slide  n字牛（低头冲刺）→ 需滑铲钻过
+//
+// 判定：z 穿过 0（玩家平面）时结算一次，不依赖 touching()
+//
+// 官方代码组织规范：var（唯一一个块）→ func → 事件处理器
+
+var (
+	myKind string  // 本克隆体的牛种
+	myLane int     // 本克隆体所在车道：0 左 1 中 2 右
+	z      float64 // 纵深坐标
+	judged bool    // 是否已做过通过判定
+	passed bool    // 是否成功躲过
+)
+
+// ===== 纵深投影 =====
+
+// projScale z → 缩放系数
+func projScale(zz float64) float64 {
+	return 300.0 / (300.0 + zz)
+}
+
+// projY z → 屏幕 Y
+func projY(zz float64) float64 {
+	return 30.0 - 80.0 * projScale(zz)
+}
+
+// projX 车道 + z → 屏幕 X
+func projX(l int, zz float64) float64 {
+	lx := 0.0
+	if l == 0 {
+		lx = -115.0
+	} else if l == 2 {
+		lx = 115.0
+	}
+	return lx * projScale(zz)
+}
+
+// place 按当前 z 与车道刷新位置与大小
+func place() {
+	sx := projX(myLane, z)
+	sy := projY(z)
+	sc := 0.75 * projScale(z)
+	setXYpos sx, sy
+	setSize sc
+}
+
+// ===== 生成参数抽取 =====
+
+// pickKind 依据赛道配置与强制事件抽一个牛种
+func pickKind() string {
+	if forceKindLeft > 0 && forceKind != "" {
+		forceKindLeft = forceKindLeft - 1
+		return forceKind
+	}
+	r := rand(0, 100)
+	if trackId == 3 {
+		// 熔岩：多牛王
+		if r < 30 {
+			return "low"
+		} else if r < 60 {
+			return "high"
+		} else if r < 88 {
+			return "mid"
+		}
+		return "boss"
+	}
+	// 晨曦 / 霓虹
+	if r < 38 {
+		return "low"
+	} else if r < 70 {
+		return "high"
+	}
+	return "mid"
+}
+
+// pickLane 依据牛种抽车道
+func pickLane(kind string) int {
+	r := rand(0, 3)
+	l := 1
+	if r < 1 {
+		l = 0
+	} else if r > 1 {
+		l = 2
+	}
+	if kind == "low" && l == 0 {
+		l = 1
+	}
+	if kind == "high" && l == 2 {
+		l = 0
+	}
+	if kind == "boss" {
+		l = 1
+	}
+	return l
+}
+
+// pickCostume 依据牛种选造型变体
+// 造型与躲避方式一一对应（画面自带提示）：
+//   stop   禁行牛 → 需换道躲开
+//   jump   躺卧牛 → 需跳跃越过
+//   slide  n字牛 → 需滑铲钻过
+func pickCostume(kind string) {
+	if kind == "low" {
+		setCostume "jump"
+	} else if kind == "high" {
+		setCostume "slide"
+	} else {
+		setCostume "stop"
+	}
+}
+
+// judge 穿过玩家平面（z <= 0）时结算一次
+func judge() {
+	// 不同车道 → 安全通过
+	if myLane != laneNow {
+		passed = true
+		if taskType == "dodge" {
+			taskProgress = taskProgress + 1
+		}
+		return
+	}
+	// 同道：看动作是否对路
+	if myKind == "low" && jumping {
+		passed = true
+		if taskType == "dodge" {
+			taskProgress = taskProgress + 1
+		}
+		return
+	}
+	if myKind == "high" && sliding {
+		passed = true
+		if taskType == "dodge" {
+			taskProgress = taskProgress + 1
+		}
+		return
+	}
+	// mid / boss 只能换道，同道必撞
+	broadcast "cowHit"
+}
+
+// ===== 事件处理器 =====
+
+onStart => {
+	// 模板本体隐藏，只有克隆体参与游戏
+	hide
+}
+
+onCloned data => {
+	myKind = pickKind()
+	myLane = pickLane(myKind)
+	pickCostume(myKind)
+	passed = false
+	judged = false
+	z = 700.0
+	place
+	show
+
+	for {
+		wait 0.05
+		// 游戏结束：冻结在原地；收到重开清场信号则自行销毁
+		if finished {
+			if wiping {
+				destroy
+			}
+			continue
+		}
+		z = z - stepLen
+		place
+		if !judged && z <= 0 {
+			judged = true
+			judge
+		}
+		if z < -90 {
+			destroy
+		}
+	}
+}
+
+// 注：重开清场不在这里监听 "wipe" —— 模板本体也会收到广播，
+// destroy 会把模板一起销毁导致后续无法再 clone。
+// 克隆体统一由 onCloned 主循环里的 finished/wiping 检查自行销毁。

@@ -1,0 +1,49 @@
+// Shadow —— 玩家脚下阴影
+//
+// 平滑跟随目标车道（玩家横移是分步动画，阴影用趋近值更有弹性），
+// 跳跃时变淡缩小 —— 用阴影对比衬托腾空高度（Subway Surfers 同款手法）。
+//
+// 官方代码组织规范：var（唯一一个块）→ func → 事件处理器
+
+var (
+	sx float64 // 阴影当前 x（平滑趋近中）
+)
+
+// laneXOf 车道号 → 屏幕 X
+func laneXOf(l int) float64 {
+	if l == 0 {
+		return -115.0
+	} else if l == 2 {
+		return 115.0
+	}
+	return 0.0
+}
+
+onStart => {
+	hide
+	sx = 0.0
+	for {
+		wait 0.05
+		if finished || !alive {
+			hide
+			continue
+		}
+		tx := laneXOf(laneNow)
+		sx = sx + (tx - sx) * 0.35
+		setXpos sx
+		setYpos -46.0
+		if jumping {
+			setGraphicEffect GhostEffect, 55
+			setSize 0.52
+		} else {
+			setGraphicEffect GhostEffect, 30
+			setSize 0.7
+		}
+		show
+	}
+}
+
+// 玩家死亡：阴影一起消失
+onMsg "playerDead", => {
+	hide
+}
